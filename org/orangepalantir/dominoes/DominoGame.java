@@ -21,8 +21,8 @@ public class DominoGame{
     private GraphicsContext gc;
     Thread gameLoop;
 
-    List<AvailableMove> moves = new ArrayList<>();
-    List<Domino> played = new ArrayList<>();
+    List<AvailableMove> moves = Collections.synchronizedList(new ArrayList<>());
+    List<Domino> played = Collections.synchronizedList(new ArrayList<>());
 
     Random ng = new Random();
 
@@ -32,7 +32,7 @@ public class DominoGame{
     GameMode mode;
     boolean SHUTDOWN = false;
     boolean validMove = false;
-
+    boolean spinner = false;
     public static DominoGame startSixesGame(){
         DominoGame game = new DominoGame();
         game.set = DominoSet.doubleSixes();
@@ -111,6 +111,12 @@ public class DominoGame{
         AvailableMove m = moves.get(moveIndex);
         if(m.isValidMove(d)){
             validMove=true;
+            if(!spinner){
+                if(d.A==d.B){
+                    d.setSpinner(true);
+                    spinner=true; //no more spinners this game.
+                }
+            }
             moves.remove(m);
             moves.addAll(m.performMove(d));
             played.add(d);
@@ -161,14 +167,22 @@ public class DominoGame{
         mode = GameMode.PlayGame;
         moves.add(new AvailableMove(450, 250, null, -1));
         update();
-        for(Player p: players){
-            while(!validMove){
-                p.makeMove();
-                if(SHUTDOWN) return;
-                update();
+        boolean playing = true;
+        while(playing) {
+            for (Player p : players) {
+                validMove=false;
+                while (!validMove) {
+                    System.out.println("waiting...");
+                    p.makeMove();
+                    if (SHUTDOWN) return;
+                    update();
+                }
+                if(p.getDominoCount()==0){
+                    playing=false;
+                    break;
+                }
             }
         }
-
 
 
     }
