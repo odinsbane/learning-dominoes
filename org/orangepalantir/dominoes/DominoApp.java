@@ -38,6 +38,11 @@ public class DominoApp extends Application {
         root.getChildren().add(canvas);
         primaryStage.setScene(new Scene(root, 800, 800));
         primaryStage.show();
+        primaryStage.setOnHidden(evt->{
+            if(game!=null){
+                game.shutdown();
+            }
+        });
     }
 
 
