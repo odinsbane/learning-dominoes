@@ -145,16 +145,16 @@ public class Domino {
                 pos[1] = length*0.5;
                 break;
             case LEFT:
-                pos[0] = width*0.5;
-                pos[1] = 0;
-                break;
-            case RIGHT:
                 pos[0] = -width*0.5;
                 pos[1] = 0;
                 break;
+            case RIGHT:
+                pos[0] = width*0.5;
+                pos[1] = 0;
+                break;
         }
-        double dx = Math.cos(theta)*pos[0] + Math.sin(theta)*pos[1];
-        double dy = -Math.sin(theta)*pos[0] + Math.cos(theta)*pos[1];
+        double dx = Math.cos(theta)*pos[0] - Math.sin(theta)*pos[1];
+        double dy = Math.sin(theta)*pos[0] + Math.cos(theta)*pos[1];
         pos[0] = dx;
         pos[1] = dy;
         return pos;
@@ -162,5 +162,11 @@ public class Domino {
 
     public void connect(Domino d, int location) {
         neighbors[location]=d;
+    }
+
+    public double getAngle() {
+
+        return theta;
+
     }
 }
