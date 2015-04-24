@@ -117,9 +117,13 @@ public class HumanPlayer implements Player{
         return false;
     }
     public void setMove(int move){
-        play = move;
-        synchronized(lock) {
-            lock.notifyAll();
+        if(selected>=0) {
+
+            play = move;
+            synchronized (lock) {
+                lock.notifyAll();
+            }
+
         }
     }
 
@@ -141,7 +145,9 @@ public class HumanPlayer implements Player{
                         playing=false;
                     }
                 }
+
             } else {
+
                 Domino d = dominos.get(selected);
                 dominos.set(selected, null);
                 if (game.performMove(d, play)) {

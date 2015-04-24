@@ -17,11 +17,11 @@ public class AvailableMove {
     double x;
     double y;
     int exposedLocation = -1;
-    Domino b;
+    Domino played;
     public AvailableMove(double x, double y, Domino d, int location){
         this.x = x;
         this.y = y;
-        b = d;
+        played = d;
         exposedLocation = location;
     }
 
@@ -34,6 +34,7 @@ public class AvailableMove {
 
         gc.setStroke(Color.BLUE);
         gc.strokeRect(x - 0.5*width, y - 0.5*width, width, width);
+        gc.fillText("" + exposedLocation, x, y);
 
     }
 
@@ -41,80 +42,108 @@ public class AvailableMove {
         System.out.println("checking");
 
         if(exposedLocation<0) return true;
-        int exposedValue = b.getPlayableValue(exposedLocation);
+        int exposedValue = played.getPlayableValue(exposedLocation);
         return d.A==exposedValue||d.B==exposedValue;
 
     }
 
-    public List<AvailableMove> performMove(Domino d){
+    public List<AvailableMove> performMove(Domino playing){
         //set the position of the domino.
         List<AvailableMove> replacements = new ArrayList<AvailableMove>();
         if(exposedLocation==-1){
             //first play.
-            if(d.isSpinner()){
+            if(playing.isSpinner()){
+                System.out.println("spinner");
                 //available spots on the left and right of domino
-                d.setPosition(x, y);
-                d.setAngle(Math.PI / 2);
-                double[] offset = d.getDirection(Domino.LEFT);
-                replacements.add(new AvailableMove(x + offset[0], y + offset[1], d, Domino.LEFT));
-                replacements.add(new AvailableMove(x - offset[0], y - offset[1], d, Domino.RIGHT));
+                playing.setPosition(x, y);
+                playing.setAngle(Math.PI / 2);
+                double[] offset = playing.getDirection(Domino.LEFT);
+                replacements.add(new AvailableMove(x + offset[0], y + offset[1], playing, Domino.LEFT));
+                replacements.add(new AvailableMove(x - offset[0], y - offset[1], playing, Domino.RIGHT));
 
             } else{
                 //available
-                d.setPosition(x, y);
-                d.setAngle(Math.PI / 2);
-                double[] offset = d.getDirection(Domino.FRONT);
+                playing.setPosition(x, y);
+                playing.setAngle(Math.PI / 2);
+                double[] offset = playing.getDirection(Domino.FRONT);
 
-                replacements.add(new AvailableMove(x + offset[0], y + offset[1], d, Domino.FRONT));
-                replacements.add(new AvailableMove(x - offset[0], y - offset[1], d, Domino.BACK));
+                replacements.add(new AvailableMove(x + offset[0], y + offset[1], playing, Domino.FRONT));
+                replacements.add(new AvailableMove(x - offset[0], y - offset[1], playing, Domino.BACK));
 
             }
         } else{
-            if(d.A==d.B){
+            if(playing.A==playing.B){
                 //gets placed side ways.
-
-
-                double[] loc = b.getDirection(exposedLocation);
-                double[] norm = normalize(loc);
-                loc[0] = norm[0]*b.width*0.5 + loc[0];
-                loc[1] = norm[1]*b.width*0.5 + loc[1];
-                double angle = Math.atan2(norm[1], -norm[0]);
-                d.setPosition(b.x + loc[0],b.y + loc[1]);
-                d.setAngle(angle + Math.PI / 2);
-                double[] displace = d.getDirection(Domino.LEFT);
-                b.connect(d, exposedLocation);
-                d.connect(b, Domino.RIGHT);
-
-                replacements.add(new AvailableMove(d.x + displace[0], d.y + displace[1], d, Domino.LEFT));
+                connectDominos(played, exposedLocation, playing, Domino.RIGHT);
+                double[] displace = playing.getDirection(Domino.RIGHT);
+                replacements.add(new AvailableMove(playing.x + displace[0], playing.y + displace[1], playing, Domino.LEFT));
             } else{
-                double[] loc = b.getDirection(exposedLocation);
-                double[] norm = normalize(loc);
-                loc[0] = norm[0]*b.length*0.5 + loc[0];
-                loc[1] = norm[1]*b.length*0.5 + loc[1];
-                double angle = Math.atan2(norm[1], -norm[0]);
-                d.setPosition(b.x + loc[0],b.y + loc[1]);
-                int value = b.getPlayableValue(exposedLocation);
+                int value = played.getPlayableValue(exposedLocation);
                 int exposed;
-                int connect;
-                if(value==d.A){
+                if(value==playing.A){
                     exposed=Domino.BACK;
-                    connect = Domino.FRONT;
-                    angle = angle - Math.PI;
                 } else{
                     exposed = Domino.FRONT;
-                    connect = Domino.BACK;
                 }
-                d.setAngle(angle);
-                double[] displace = d.getDirection(exposed);
-                b.connect(d, exposedLocation);
-                d.connect(b, connect);
 
-                replacements.add(new AvailableMove(d.x + displace[0], d.y + displace[1], d, exposed));
+
+                connectDominos(played, exposedLocation, playing, exposed);
+                double[] displace = playing.getDirection(exposed);
+
+                replacements.add(new AvailableMove(playing.x + displace[0], playing.y + displace[1], playing, exposed));
             }
         }
 
 
         return replacements;
+    }
+
+    public void connectDominos(Domino a, int faceA, Domino b, int faceB){
+
+        double[] aPos = a.getPosition();
+        double angle = a.getAngle();
+        double[] aDir = a.getDirection(faceA);
+
+        switch(faceA){
+            case Domino.FRONT:
+                //no offset.
+                break;
+            case Domino.BACK:
+                angle = angle+Math.PI;
+                break;
+            case Domino.LEFT:
+                angle = angle - Math.PI/2;
+                break;
+            case Domino.RIGHT:
+                angle = angle + Math.PI/2;
+                break;
+            default:
+                throw new IllegalArgumentException(String.format("%d is not a valid face", faceA));
+        }
+
+        switch(faceB){
+            case Domino.FRONT:
+                //face to face
+                angle = angle + Math.PI;
+                break;
+            case Domino.BACK:
+                //same direction.
+                break;
+            case Domino.LEFT:
+                angle = angle - Math.PI/2;
+                break;
+            case Domino.RIGHT:
+                angle = angle + Math.PI/2;
+                break;
+            default:
+                throw new IllegalArgumentException(String.format("%d is not a valid face", faceB));
+        }
+        b.setAngle(angle);
+        double[] bDir = b.getDirection(faceB);
+        b.setPosition(aPos[0] + aDir[0] - bDir[0], aPos[1] + aDir[1] - bDir[1]);
+
+        a.connect(b, faceA);
+        b.connect(a, faceB);
     }
 
     double[] normalize(double[] v){
