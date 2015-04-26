@@ -18,11 +18,18 @@ public class AvailableMove {
     double y;
     int exposedLocation = -1;
     Domino played;
-    public AvailableMove(double x, double y, Domino d, int location){
-        this.x = x;
-        this.y = y;
+    public AvailableMove(Domino d, int location){
+        double[] pos = d.getPosition();
+        double[] offset = d.getDirection(location);
+        this.x = pos[0] + offset[0];
+        this.y = pos[1] + offset[1];
         played = d;
         exposedLocation = location;
+    }
+
+    public AvailableMove(double x, double y){
+        this.x = x;
+        this.y = y;
     }
 
 
@@ -33,8 +40,10 @@ public class AvailableMove {
     public void draw(GraphicsContext gc){
 
         gc.setStroke(Color.BLUE);
-        gc.strokeRect(x - 0.5*width, y - 0.5*width, width, width);
-        gc.fillText("" + exposedLocation, x, y);
+        gc.strokeRect(x - 0.5 * width, y - 0.5 * width, width, width);
+        gc.setFill(Color.RED);
+        if(played!=null)
+        gc.fillText("" + exposedLocation + "," + played.getPlayableValue(exposedLocation), x, y);
 
     }
 
@@ -57,18 +66,15 @@ public class AvailableMove {
                 //available spots on the left and right of domino
                 playing.setPosition(x, y);
                 playing.setAngle(Math.PI / 2);
-                double[] offset = playing.getDirection(Domino.LEFT);
-                replacements.add(new AvailableMove(x + offset[0], y + offset[1], playing, Domino.LEFT));
-                replacements.add(new AvailableMove(x - offset[0], y - offset[1], playing, Domino.RIGHT));
+                replacements.add(new AvailableMove(playing, Domino.LEFT));
+                replacements.add(new AvailableMove(playing, Domino.RIGHT));
 
             } else{
                 //available
                 playing.setPosition(x, y);
                 playing.setAngle(Math.PI / 2);
-                double[] offset = playing.getDirection(Domino.FRONT);
-
-                replacements.add(new AvailableMove(x + offset[0], y + offset[1], playing, Domino.FRONT));
-                replacements.add(new AvailableMove(x - offset[0], y - offset[1], playing, Domino.BACK));
+                replacements.add(new AvailableMove(playing, Domino.FRONT));
+                replacements.add(new AvailableMove(playing, Domino.BACK));
 
             }
         } else{
@@ -76,28 +82,56 @@ public class AvailableMove {
                 //gets placed side ways.
                 connectDominos(played, exposedLocation, playing, Domino.RIGHT);
                 double[] displace = playing.getDirection(Domino.RIGHT);
-                replacements.add(new AvailableMove(playing.x + displace[0], playing.y + displace[1], playing, Domino.LEFT));
+                replacements.add(new AvailableMove(playing, Domino.LEFT));
             } else{
                 int value = played.getPlayableValue(exposedLocation);
                 int exposed;
+                int connect;
                 if(value==playing.A){
                     exposed=Domino.BACK;
+                    connect=Domino.FRONT;
                 } else{
                     exposed = Domino.FRONT;
+                    connect = Domino.BACK;
                 }
 
 
-                connectDominos(played, exposedLocation, playing, exposed);
-                double[] displace = playing.getDirection(exposed);
-
-                replacements.add(new AvailableMove(playing.x + displace[0], playing.y + displace[1], playing, exposed));
+                connectDominos(played, exposedLocation, playing, connect);
+                replacements.add(new AvailableMove(playing, exposed));
+                if(played.isSpinner() && played.connectedCount()==2){
+                    replacements.add(new AvailableMove(played, Domino.FRONT));
+                    replacements.add(new AvailableMove(played, Domino.BACK));
+                }
             }
         }
 
 
         return replacements;
     }
+    public int getScore(){
+        int score;
 
+        if(played.isSpinner()){
+            //check for exposed
+            if(played.connectedCount()==1){
+                score = played.A + played.B;
+            } else if(played.connectedCount()==0){
+                score = played.A;
+            } else{
+                score = 0;
+            }
+        } else if(played.A==played.B){
+            score = played.A + played.B;
+        } else{
+            if(exposedLocation==Domino.FRONT){
+                score = played.A;
+            } else{
+                score = played.B;
+            }
+        }
+
+        return score;
+    }
     public void connectDominos(Domino a, int faceA, Domino b, int faceB){
 
         double[] aPos = a.getPosition();
@@ -146,10 +180,19 @@ public class AvailableMove {
         b.connect(a, faceB);
     }
 
-    double[] normalize(double[] v){
-        double m = Math.sqrt(v[0]*v[0] + v[1]*v[1]);
+    public static void main(String[] args){
 
-        return new double[]{v[0]/m, v[1]/m};
+        AvailableMove one = new AvailableMove(0,0);
+        List<AvailableMove> next = one.performMove(new Domino(1,0));
+        Domino b = new Domino(1,0);
+        for(AvailableMove m: next){
+            System.out.println("playing: " + m.exposedLocation + "," + m.x + "," + m.y);
+            List<AvailableMove> c = m.performMove(b);
+            for(AvailableMove cm: c){
+                System.out.println(cm.exposedLocation + "," + cm.x + "," + cm.y);
+            }
+        }
+
     }
 
 }

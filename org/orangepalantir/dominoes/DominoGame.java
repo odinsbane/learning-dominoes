@@ -165,7 +165,7 @@ public class DominoGame{
         }
         System.out.println("every player has pieces");
         mode = GameMode.PlayGame;
-        moves.add(new AvailableMove(450, 250, null, -1));
+        moves.add(new AvailableMove(450, 250));
         update();
         boolean playing = true;
         while(playing) {
@@ -177,6 +177,7 @@ public class DominoGame{
                     if (SHUTDOWN) return;
                     update();
                 }
+                calculateScore(p);
                 if(p.getDominoCount()==0){
                     playing=false;
                     break;
@@ -184,6 +185,20 @@ public class DominoGame{
             }
         }
 
+
+    }
+
+    private void calculateScore(Player p) {
+        int tally = 0;
+        for(AvailableMove mv: moves){
+            tally += mv.getScore();
+        }
+
+        if(tally%5==0){
+            System.out.println("Score: " + tally);
+        } else{
+            System.out.println("mark: " + tally);
+        }
 
     }
 
@@ -214,5 +229,7 @@ public class DominoGame{
         drawMoves();
 
     }
-    
+
+
+
 }

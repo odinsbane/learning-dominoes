@@ -44,11 +44,40 @@ public class JavaFXGeometryTests  extends Application {
 
                 double x = 100 + 150*i;
                 double y = 100 + 150*j;
-                Domino a = new Domino(i,j);
+                int af,ab;
+
+                switch(i){
+                    case Domino.FRONT:
+                        af=1;
+                        ab=0;
+                        break;
+                    case Domino.BACK:
+                        af=0;
+                        ab=1;
+                        break;
+                    default:
+                        af=1;
+                        ab=1;
+                }
+                Domino a = new Domino(af,ab);
                 a.setAngle(ANGLE);
                 a.setPosition(x, y);
                 a.setFaceUp(true);
-                Domino b = new Domino(i, j);
+                int bf, bb;
+                switch(j){
+                    case Domino.FRONT:
+                        bf = 2;
+                        bb = 0;
+                        break;
+                    case Domino.BACK:
+                        bf = 0;
+                        bb = 2;
+                        break;
+                    default:
+                        bf=2;
+                        bb=2;
+                }
+                Domino b = new Domino(bf, bb);
                 connectDominos(a, i, b, j);
                 b.setFaceUp(true);
                 a.draw(gc);
@@ -138,7 +167,7 @@ public class JavaFXGeometryTests  extends Application {
         drawDominos(gc);
 
         root.getChildren().add(rect);
-
+        /*
         Timer t = new Timer();
         t.schedule(new TimerTask() {
             @Override
@@ -154,11 +183,13 @@ public class JavaFXGeometryTests  extends Application {
                 });
 
             }}, 200, 15);
+
         primaryStage.setOnHidden(evt -> {
             if (t != null) {
                 t.cancel();
             }
         });
+        */
 
     }
 
