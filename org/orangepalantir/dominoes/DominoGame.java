@@ -4,6 +4,7 @@ package org.orangepalantir.dominoes;
 import javafx.application.Platform;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.paint.Color;
+import org.orangepalantir.dominoes.players.BasicAI;
 import org.orangepalantir.dominoes.players.HumanPlayer;
 import org.orangepalantir.dominoes.players.Player;
 
@@ -33,6 +34,9 @@ public class DominoGame{
     boolean SHUTDOWN = false;
     boolean validMove = false;
     boolean spinner = false;
+
+    PlayerScores scoreBoard = new PlayerScores();
+
     public static DominoGame startSixesGame(){
         DominoGame game = new DominoGame();
         game.set = DominoSet.doubleSixes();
@@ -60,18 +64,24 @@ public class DominoGame{
     public GameMode getMode(){
         return mode;
     }
+
+    public List<AvailableMove> getAvailableMoves(){
+        return Collections.unmodifiableList(moves);
+    }
+
     void drawBoard(){
         gc.setStroke(Color.BLACK);
         gc.setLineWidth(5);
         gc.setFill(Color.AQUAMARINE);
 
-        gc.fillRect(0,0,600, 600);
-        gc.strokeRect(0, 0, 600, 600);
+        gc.fillRect(0,0,800, 600);
+        gc.strokeRect(0, 0, 800, 600);
     }
 
     void drawBoneYard(){
-
-        boneYard.forEach(d -> d.draw(gc));
+        synchronized(boneYard) {
+            boneYard.forEach(d -> d.draw(gc));
+        }
     }
 
     boolean choosePiece(double x, double y){
@@ -92,6 +102,28 @@ public class DominoGame{
             return true;
         }
         return false;
+    }
+
+    /**
+     * Gets a random domino from the boneyard. If there is one available. Otherwise returns null.
+     *
+     * @return
+     */
+    public Domino getRandomBone(){
+        if(boneYard.size()==0){
+            return null;
+        }
+        int i = ng.nextInt(boneYard.size());
+        Iterator<Domino> iter = boneYard.iterator();
+        for(int j = 0; j<i; j++){
+            iter.next();
+        }
+        Domino d = iter.next();
+        synchronized(boneYard) {
+            iter.remove();
+        }
+        return d;
+
     }
 
     boolean selectPlay(double x, double y){
@@ -125,6 +157,10 @@ public class DominoGame{
         return validMove;
     }
 
+    public boolean performMove(Domino d, AvailableMove m){
+        return performMove(d, moves.indexOf(m));
+    }
+
     public void clicked(double x, double y){
         switch(mode){
             case ChoosePieces:
@@ -133,7 +169,13 @@ public class DominoGame{
             case GetPlayers:
                 mode = GameMode.ChoosePieces;
                 humanPlayer = new HumanPlayer(this);
+                scoreBoard.addPlayer(humanPlayer);
+                BasicAI bai = new BasicAI(this);
+                scoreBoard.addPlayer(bai);
+
                 players.add(humanPlayer);
+                players.add(bai);
+
                 gameLoop = new Thread(()->gameLoop());
                 gameLoop.start();
                 break;
@@ -231,5 +273,67 @@ public class DominoGame{
     }
 
 
+
+}
+
+class PlayerScores{
+
+    Map<Player, Score> scores = new HashMap<>();
+
+    public void addPlayer(Player p){
+        scores.put(p, new Score());
+    }
+    public void score(Player p, int value){
+        if(value<=0||value%5!=0){
+            throw new IllegalArgumentException("scores must be multiples of 5 greater than 0.");
+        }
+        int marks = value/5;
+        Score s = scores.get(p);
+        s.addScore(marks);
+    }
+
+}
+
+class Score{
+    List<Tally> tallies = new ArrayList<>();
+    int total;
+    public int getValue(){
+        return total*5;
+    }
+
+    public void addScore(int marks){
+
+        total += marks;
+        if(tallies.size()!=0){
+            Tally last = tallies.get(tallies.size()-1);
+            if(last.value<2){
+                last.add(1);
+                marks = marks-1;
+            }
+            int tens = marks/2;
+            for(int i = 0; i<tens; i++){
+                tallies.add(new Tally(2));
+            }
+            if(marks%2>0){
+                tallies.add(new Tally(1));
+            }
+        }
+
+    }
+
+}
+
+class Tally{
+    int value;
+    int count = 0;
+    public Tally(int v){
+        value=v;
+        count = 1;
+    }
+
+    public void add(int v){
+        value+=v;
+        count++;
+    }
 
 }

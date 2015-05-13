@@ -8,5 +8,4 @@ import org.orangepalantir.dominoes.Domino;
 public interface Player {
     public void makeMove();
     public int getDominoCount();
-
 }

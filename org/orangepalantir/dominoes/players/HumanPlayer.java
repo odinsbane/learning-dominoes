@@ -70,8 +70,8 @@ public class HumanPlayer implements Player{
             Domino a = dominos.get(i);
             if(a==null){
                 dominos.set(i, d);
-                double y = 500 - (i/4)*35;
-                double x = 300 + (i%4)*70;
+                double y = 500 - (i/4)*1.2*d.width;
+                double x = 300 + (i%4)*1.2*d.length;
                 d.setPosition(x, y);
                 d.setAngle(Math.PI / 2);
                 count += 1;
@@ -80,8 +80,8 @@ public class HumanPlayer implements Player{
             }
         }
         dominos.add(d);
-        double y = 500 - (i/4)*35;
-        double x = 300 + (i%4)*70;
+        double y = 500 - (i/4)*1.2*d.width;
+        double x = 300 + (i%4)*1.2*d.length;
         d.setPosition(x, y);
         d.setAngle(Math.PI / 2);
         count += 1;
@@ -150,11 +150,13 @@ public class HumanPlayer implements Player{
 
                 Domino d = dominos.get(selected);
                 dominos.set(selected, null);
+                count--;
                 if (game.performMove(d, play)) {
                     playing = false;
                 } else {
                     //put it back.
                     dominos.set(selected, d);
+                    count++;
                 }
 
                 selected = -1;

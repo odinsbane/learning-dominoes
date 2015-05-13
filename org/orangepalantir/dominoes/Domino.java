@@ -127,11 +127,14 @@ public class Domino {
         if(faceUp){
             gc.setLineWidth(1);
             gc.setFont(new Font(8.0));
-            gc.strokeText(A + "", 0.33*width, 0.75*length);
-            gc.strokeText(B + "", 0.33*width, 0.25*length);
+            gc.strokeText(B + "", 0.33*width, 0.75*length);
+            gc.strokeText(A + "", 0.33*width, 0.25*length);
         }
+
+
         gc.translate(width*0.5, length*0.5);
         gc.rotate(-theta *ugly);
+
         gc.translate(-x-width*0.5, -y-length*0.5);
 
     }
@@ -158,6 +161,7 @@ public class Domino {
         }
         double dx = Math.cos(theta)*pos[0] - Math.sin(theta)*pos[1];
         double dy = Math.sin(theta)*pos[0] + Math.cos(theta)*pos[1];
+        //System.out.printf("%d: %2.2f before %f,%f after %f,%f\n",position, theta/Math.PI, pos[0], pos[1], dx, dy);
         pos[0] = dx;
         pos[1] = dy;
         return pos;
