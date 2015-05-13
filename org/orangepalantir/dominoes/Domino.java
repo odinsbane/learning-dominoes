@@ -166,7 +166,15 @@ public class Domino {
     public void connect(Domino d, int location) {
         neighbors[location]=d;
     }
-
+    public int connectedCount(){
+        int c = 0;
+        for(int i = 0; i<neighbors.length; i++){
+            if(neighbors[i]!=null){
+                c++;
+            }
+        }
+        return c;
+    }
     public double getAngle() {
 
         return theta;
