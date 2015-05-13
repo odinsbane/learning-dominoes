@@ -4,6 +4,8 @@ package org.orangepalantir.dominoes;
 import javafx.application.Platform;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.paint.Color;
+import javafx.scene.paint.Paint;
+import javafx.scene.text.Font;
 import org.orangepalantir.dominoes.players.BasicAI;
 import org.orangepalantir.dominoes.players.HumanPlayer;
 import org.orangepalantir.dominoes.players.Player;
@@ -36,7 +38,7 @@ public class DominoGame{
     boolean spinner = false;
 
     PlayerScores scoreBoard = new PlayerScores();
-
+    int passCounter = 0;
     public static DominoGame startSixesGame(){
         DominoGame game = new DominoGame();
         game.set = DominoSet.doubleSixes();
@@ -211,16 +213,23 @@ public class DominoGame{
         update();
         boolean playing = true;
         while(playing) {
+            int passed;
             for (Player p : players) {
                 validMove=false;
+                passed = passCounter;
                 while (!validMove) {
                     System.out.println("waiting...");
                     p.makeMove();
                     if (SHUTDOWN) return;
                     update();
                 }
+                if(passCounter>passed){
+                    //pass count increasing.
+                } else{
+                    passCounter=0;
+                }
                 calculateScore(p);
-                if(p.getDominoCount()==0){
+                if(p.getDominoCount()==0||passCounter==players.size()){
                     playing=false;
                     break;
                 }
@@ -237,10 +246,10 @@ public class DominoGame{
         }
 
         if(tally%5==0){
-            System.out.println("Score: " + tally);
-        } else{
-            System.out.println("mark: " + tally);
+            scoreBoard.score(p, tally);
         }
+
+        scoreBoard.setCurrentTotal(tally);
 
     }
 
@@ -254,8 +263,10 @@ public class DominoGame{
     }
 
     void drawMoves(){
-        for(AvailableMove m: moves){
-            m.draw(gc);
+        synchronized(moves) {
+            for (AvailableMove m : moves) {
+                m.draw(gc);
+            }
         }
     }
 
@@ -269,17 +280,20 @@ public class DominoGame{
         humanPlayer.draw(gc);
         drawPlayed();
         drawMoves();
-
+        scoreBoard.draw(gc);
     }
 
 
-
+    public void pass() {
+        passCounter++;
+        validMove=true;
+    }
 }
 
 class PlayerScores{
 
     Map<Player, Score> scores = new HashMap<>();
-
+    int currentTotal = 0;
     public void addPlayer(Player p){
         scores.put(p, new Score());
     }
@@ -292,6 +306,24 @@ class PlayerScores{
         s.addScore(marks);
     }
 
+    public void setCurrentTotal(int v){
+        currentTotal = v;
+    }
+
+    public void draw(GraphicsContext gc) {
+        //gc.setFill(Color.BLACK);
+        //gc.fillRect(0, 0, 800, 200);
+        gc.setFont(new Font(12));
+        gc.setStroke(Color.WHITE);
+        gc.strokeText("total: " + currentTotal, 5, 17);
+        int i = 1;
+        for(Player p: scores.keySet() ){
+            gc.strokeText("player: " + i, 100*i, 17);
+            gc.strokeText("total: " + scores.get(p).getValue(), 100*i, 30);
+            gc.strokeText("dominos: " + p.getDominoCount(), 100*i, 43);
+            i++;
+        }
+    }
 }
 
 class Score{

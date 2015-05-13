@@ -43,7 +43,11 @@ public class BasicAI implements Player {
             }
         }
         if(good.size()==0){
-            game.getRandomBone();
+            Domino d = game.getRandomBone();
+            if(d==null){
+                game.pass();
+            }
+            dominos.add(d);
             return;
         }
         int max = -1;
