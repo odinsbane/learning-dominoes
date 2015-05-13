@@ -28,7 +28,7 @@ public class DominoApp extends Application {
     public void start(Stage primaryStage) {
         primaryStage.setTitle("Hello World!");
 
-        Canvas canvas = new Canvas(600, 600);
+        Canvas canvas = new Canvas(800, 600);
         gc = canvas.getGraphicsContext2D();
         canvas.addEventHandler(MouseEvent.MOUSE_PRESSED, mouseEvent -> {
             if(game==null){

@@ -4,13 +4,14 @@ import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Rectangle;
 import javafx.scene.shape.StrokeLineJoin;
+import javafx.scene.text.Font;
 
 /**
  * Created by melkor on 4/8/15.
  */
 public class Domino {
-    public double length = 60;
-    public double width = 25;
+    public double length = 30;
+    public double width = 15;
     public final int A;
     public final int B;
 
@@ -124,6 +125,8 @@ public class Domino {
         gc.strokeRect(0, 0, width, length);
 
         if(faceUp){
+            gc.setLineWidth(1);
+            gc.setFont(new Font(8.0));
             gc.strokeText(A + "", 0.33*width, 0.75*length);
             gc.strokeText(B + "", 0.33*width, 0.25*length);
         }
