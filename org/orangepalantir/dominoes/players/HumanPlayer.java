@@ -12,6 +12,7 @@ import java.util.List;
 import java.util.Queue;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.Collectors;
 
 /**
  * Created by msmith on 4/9/15.
@@ -32,6 +33,14 @@ public class HumanPlayer implements Player{
 
     public int getDominoCount(){
         return count;
+    }
+
+    @Override
+    public List<Domino> returnDominos() {
+        List<Domino> ret = dominos.stream().filter(w->w!=null).collect(Collectors.toList());
+        dominos.clear();
+        count = 0;
+        return ret;
     }
 
     public void draw(GraphicsContext gc){

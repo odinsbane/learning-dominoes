@@ -7,6 +7,7 @@ import org.orangepalantir.dominoes.DominoGame;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
+import java.util.stream.Collectors;
 
 /**
  * Created by msmith on 5/13/15.
@@ -87,5 +88,12 @@ public class BasicAI implements Player {
     @Override
     public int getDominoCount() {
         return dominos.size();
+    }
+
+    @Override
+    public List<Domino> returnDominos() {
+        List<Domino> ret = dominos.stream().collect(Collectors.toList());
+        dominos.clear();
+        return ret;
     }
 }

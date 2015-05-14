@@ -43,7 +43,6 @@ public class DominoGame{
         DominoGame game = new DominoGame();
         game.set = DominoSet.doubleSixes();
         game.running.set(true);
-        game.fillBoneYard();
         game.mode = GameMode.GetPlayers;
         return game;
     }
@@ -60,6 +59,7 @@ public class DominoGame{
             Domino d = set.getRandomDomino();
             d.setPosition(ng.nextDouble()*75 + 60, ng.nextDouble()*400 + 100);
             d.setAngle(2*ng.nextDouble()*Math.PI);
+            d.setFaceUp(false);
             boneYard.add(d);
         }
     }
@@ -169,17 +169,7 @@ public class DominoGame{
                 choosePiece(x, y);
                 break;
             case GetPlayers:
-                mode = GameMode.ChoosePieces;
-                humanPlayer = new HumanPlayer(this);
-                scoreBoard.addPlayer(humanPlayer);
-                BasicAI bai = new BasicAI(this);
-                scoreBoard.addPlayer(bai);
-
-                players.add(humanPlayer);
-                players.add(bai);
-
-                gameLoop = new Thread(()->gameLoop());
-                gameLoop.start();
+                startGame();
                 break;
             case PlayGame:
                 if(choosePiece(x,y)){
@@ -197,47 +187,116 @@ public class DominoGame{
     }
 
     void gameLoop(){
-
-        for(Player p: players){
-
-            while(p.getDominoCount()<7){
-                p.makeMove();
-                if(SHUTDOWN) return;
-                update();
-            }
-
-        }
-        System.out.println("every player has pieces");
-        mode = GameMode.PlayGame;
-        moves.add(new AvailableMove(450, 250));
-        update();
+        dealHand();
         boolean playing = true;
         while(playing) {
-            int passed;
-            for (Player p : players) {
-                validMove=false;
-                passed = passCounter;
-                while (!validMove) {
-                    System.out.println("waiting...");
-                    p.makeMove();
-                    if (SHUTDOWN) return;
+
+            switch(mode){
+                case ChoosePieces:
+                    for(Player p: players){
+
+                        while(p.getDominoCount()<7){
+                            p.makeMove();
+                            if(SHUTDOWN) return;
+                            update();
+                        }
+
+                    }
+                    mode = GameMode.PlayGame;
+                    moves.add(new AvailableMove(450, 250));
                     update();
-                }
-                if(passCounter>passed){
-                    //pass count increasing.
-                } else{
-                    passCounter=0;
-                }
-                calculateScore(p);
-                if(p.getDominoCount()==0||passCounter==players.size()){
-                    playing=false;
+                case PlayGame:
+                    int passed;
+                    for (Player p : players) {
+                        validMove=false;
+                        passed = passCounter;
+                        while (!validMove) {
+                            p.makeMove();
+                            if (SHUTDOWN) return;
+                            update();
+                        }
+                        if(passCounter>passed){
+                            //pass count increasing.
+                        } else{
+                            passCounter=0;
+                        }
+                        calculateScore(p);
+                        if(p.getDominoCount()==0||passCounter==players.size()){
+                            mode=GameMode.EndOfHand;
+                            break;
+                        }
+                    }
+
                     break;
-                }
+                case EndOfHand:
+                    endOfHandScore();
+                    break;
+                case EndOfGame:
+
+                    break;
             }
+
+
+
         }
 
 
     }
+
+    private void startGame(){
+        humanPlayer = new HumanPlayer(this);
+        scoreBoard.addPlayer(humanPlayer);
+        BasicAI bai = new BasicAI(this);
+        scoreBoard.addPlayer(bai);
+
+        players.add(humanPlayer);
+        players.add(bai);
+
+        gameLoop = new Thread(()->gameLoop());
+        gameLoop.start();
+    }
+
+    private void dealHand(){
+        fillBoneYard();
+        mode = GameMode.ChoosePieces;
+        update();
+    }
+
+    private void endOfHandScore(){
+        int min = Integer.MAX_VALUE;
+        int sum = 0;
+        Player winner=null;
+        for(Player p: players){
+            List<Domino> dees = p.returnDominos();
+            int v = dees.stream().mapToInt(d->d.A+d.B).sum();
+            if(v<min){
+               min = v;
+                winner = p;
+            }
+            sum += v;
+            dees.forEach(d->{d.setFaceUp(false);set.returnDomino(d);});
+        }
+
+        sum = sum - 2*min;
+        sum = (sum - sum%5);
+        boolean finished = false;
+        if(sum>0) {
+            finished = scoreBoard.score(winner, sum);
+        }
+        played.forEach(set::returnDomino);
+        played.clear();
+        boneYard.forEach(set::returnDomino);
+        boneYard.clear();
+        passCounter = 0;
+        moves.clear();
+        spinner = false;
+        if(!finished) {
+            dealHand();
+        } else{
+            mode=GameMode.EndOfGame;
+        }
+    }
+
 
     private void calculateScore(Player p) {
         int tally = 0;
@@ -245,8 +304,11 @@ public class DominoGame{
             tally += mv.getScore();
         }
 
-        if(tally%5==0){
-            scoreBoard.score(p, tally);
+        if(tally>0&&tally%5==0){
+            boolean won = scoreBoard.score(p, tally);
+            if(won){
+                mode = GameMode.EndOfGame;
+            }
         }
 
         scoreBoard.setCurrentTotal(tally);
@@ -291,19 +353,25 @@ public class DominoGame{
 }
 
 class PlayerScores{
-
+    int winning = 150;
     Map<Player, Score> scores = new HashMap<>();
     int currentTotal = 0;
     public void addPlayer(Player p){
         scores.put(p, new Score());
     }
-    public void score(Player p, int value){
+    public boolean score(Player p, int value){
         if(value<=0||value%5!=0){
             throw new IllegalArgumentException("scores must be multiples of 5 greater than 0.");
         }
-        int marks = value/5;
+
         Score s = scores.get(p);
+        if(s.getValue()+value>=winning){
+            value = winning - s.getValue();
+        }
+
+        int marks = value/5;
         s.addScore(marks);
+        return s.getValue()==winning;
     }
 
     public void setCurrentTotal(int v){

@@ -38,6 +38,10 @@ public class DominoSet {
         return d;
     }
 
+    public void returnDomino(Domino d){
+        dominos.add(d);
+    }
+
     public boolean hasDominos() {
         return dominos.size()>0;
     }
