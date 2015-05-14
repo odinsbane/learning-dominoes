@@ -39,6 +39,7 @@ public class DominoSet {
     }
 
     public void returnDomino(Domino d){
+        d.setSpinner(false);
         dominos.add(d);
     }
 

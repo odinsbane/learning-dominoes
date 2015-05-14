@@ -232,7 +232,7 @@ public class DominoGame{
                     endOfHandScore();
                     break;
                 case EndOfGame:
-
+                    playing=false;
                     break;
             }
 

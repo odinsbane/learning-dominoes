@@ -138,7 +138,6 @@ public class HumanPlayer implements Player{
 
     void playDomino(){
         boolean playing = true;
-        System.out.println("playing");
         while(playing&&!Thread.interrupted()){
 
             if(selected<0||play<0){
