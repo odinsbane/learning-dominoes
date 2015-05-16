@@ -140,7 +140,6 @@ public class AvailableMove {
     }
     public int getScore(){
         int score;
-        System.out.println(played.isSpinner() + "," + played.A + ":" + played.B + ", " + played.connectedCount());
         if(played.isSpinner()){
             //check for exposed
             if(played.connectedCount()==1){
