@@ -31,12 +31,26 @@ public class JavaFXGeometryTests  extends Application {
         double[] z = a.getDirection(Domino.FRONT);
         double[] bz = b.getDirection(Domino.BACK);
         double[] p = a.getPosition();
-        b.setPosition(p[0] + z[0] - bz[0], p[1]+z[1]-bz[1]);
+        b.setPosition(p[0] + z[0] - bz[0], p[1] + z[1] - bz[1]);
 
         a.draw(gc);
         b.draw(gc);
     }
+    public void drawAvailableMove(GraphicsContext gc){
+        for(int j = 0; j<4; j++) {
 
+            Domino d = new Domino(1, 1);
+            d.setPosition(200, 200);
+            d.setAngle(Math.PI / 2 * j);
+            d.setFaceUp(true);
+            d.draw(gc);
+            for (int i = 0; i < 4; i++) {
+                AvailableMove m = new AvailableMove(d, i);
+                m.draw(gc);
+            }
+        }
+
+    }
     public void drawDominos(GraphicsContext gc){
 
         for(int i = 0; i<4; i++){
@@ -165,6 +179,7 @@ public class JavaFXGeometryTests  extends Application {
         rect.setFill(Color.RED);
 
         drawDominos(gc);
+        drawAvailableMove(gc);
 
         root.getChildren().add(rect);
         /*

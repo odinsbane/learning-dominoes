@@ -184,4 +184,10 @@ public class Domino {
         return theta;
 
     }
+
+    public void clearConnections() {
+        for(int i = 0; i<4; i++){
+            neighbors[i] = null;
+        }
+    }
 }

@@ -135,6 +135,15 @@ public class HumanPlayer implements Player{
 
         }
     }
+    boolean passed=false;
+    public void pass(){
+        game.pass();
+
+        passed=true;
+        synchronized (lock){
+            lock.notifyAll();
+        }
+    }
 
     void playDomino(){
         boolean playing = true;
@@ -148,6 +157,10 @@ public class HumanPlayer implements Player{
                     }
                     try {
                         lock.wait();
+                        if(passed){
+                            passed=false;
+                            playing=false;
+                        }
                     } catch (InterruptedException e) {
                         //game ended.
                         playing=false;

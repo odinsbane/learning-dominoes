@@ -19,8 +19,6 @@ public class AvailableMove {
     int exposedLocation = -1;
     Domino played;
     public AvailableMove(Domino d, int location){
-        double[] pos = d.getPosition();
-        double[] offset = d.getDirection(location);
         played = d;
         exposedLocation = location;
     }
@@ -32,18 +30,10 @@ public class AvailableMove {
 
 
     public boolean contains(double x, double y){
-        double tx,ty;
-        if(played!=null){
-            double[] pos = played.getPosition();
-            double[] offset = played.getDirection(exposedLocation);
-            tx = pos[0] + offset[0];
-            ty = pos[1] + offset[1];
-        } else{
-            tx = xy[0];
-            ty = xy[1];
-        }
+        double[] pos = getPosition();
 
-        return x>=tx - hw&&x - tx<=hw&&y>=ty-hw&&y - ty<=hw;
+
+        return x>=pos[0] - hw&&x - pos[0]<=hw&&y>=pos[1]-hw&&y - pos[1]<=hw;
 
     }
 
@@ -60,21 +50,30 @@ public class AvailableMove {
         int exposedValue = played.getPlayableValue(exposedLocation);
         return (exposedValue==check.A?check.B:check.A) - lost;
     }
-
-    public void draw(GraphicsContext gc){
-        double x,y;
+    double[] getPosition(){
+        double[] p = new double[2];
         if(played!=null){
             double[] pos = played.getPosition();
             double[] offset = played.getDirection(exposedLocation);
-            x = pos[0] + offset[0];
-            y = pos[1] + offset[1];
+            double l = Math.sqrt(offset[0]*offset[0] + offset[1]*offset[1]);
+            double a = (l+width*0.5+2)/l;
+            p[0] = pos[0] + 0.5*played.width + offset[0]*a;
+            p[1] = pos[1] + 0.5*played.length + +offset[1]*a;
         } else{
-            x = xy[0];
-            y = xy[1];
+            p[0] = xy[0];
+            p[1] = xy[1];
         }
+
+        return p;
+    }
+    public void draw(GraphicsContext gc){
+
+        double[] pos = getPosition();
+        double x = pos[0] - hw;
+        double y = pos[1] - hw;
         gc.setStroke(Color.BLUE);
         gc.setLineWidth(2.0);
-        gc.strokeRect(x - 0.5 * width, y - 0.5 * width, width, width);
+        gc.strokeRect(x, y, width, width);
         gc.setFill(Color.RED);
         if(played!=null)
         gc.fillText("" + exposedLocation + "," + played.getPlayableValue(exposedLocation), x, y);
@@ -141,7 +140,7 @@ public class AvailableMove {
     }
     public int getScore(){
         int score;
-
+        System.out.println(played.isSpinner() + "," + played.A + ":" + played.B + ", " + played.connectedCount());
         if(played.isSpinner()){
             //check for exposed
             if(played.connectedCount()==1){

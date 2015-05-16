@@ -5,6 +5,7 @@ import javafx.application.Platform;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.paint.Color;
 import javafx.scene.paint.Paint;
+import javafx.scene.shape.Rectangle;
 import javafx.scene.text.Font;
 import org.orangepalantir.dominoes.players.BasicAI;
 import org.orangepalantir.dominoes.players.HumanPlayer;
@@ -179,6 +180,7 @@ public class DominoGame{
                 } else if(selectPlay(x, y)){
                     update();
                 }
+                checkControls(x,y);
                 break;
             default:
                 //waiting.
@@ -195,7 +197,7 @@ public class DominoGame{
                 case ChoosePieces:
                     for(Player p: players){
 
-                        while(p.getDominoCount()<7){
+                        while(p.getDominoCount()<5){
                             p.makeMove();
                             if(SHUTDOWN) return;
                             update();
@@ -258,6 +260,7 @@ public class DominoGame{
 
     private void dealHand(){
         fillBoneYard();
+        spinner=false;
         mode = GameMode.ChoosePieces;
         update();
     }
@@ -333,8 +336,10 @@ public class DominoGame{
     }
 
     void drawPlayed(){
-        played.forEach(d->d.draw(gc));
+        played.forEach(d -> d.draw(gc));
     }
+
+
 
     void repaint(){
         drawBoard();
@@ -342,9 +347,29 @@ public class DominoGame{
         humanPlayer.draw(gc);
         drawPlayed();
         drawMoves();
+        drawControls();
         scoreBoard.draw(gc);
     }
 
+    Rectangle passButton = new Rectangle(600, 400, 30, 30);
+    public void drawControls(){
+        gc.setFill(Color.BLACK);
+
+        gc.fillRect(600, 400, 30, 30);
+        gc.setStroke(Color.WHITE);
+        gc.setFont(new Font(10));
+        gc.setLineWidth(1);
+        gc.strokeText("pass", 600, 421);
+    }
+
+    public boolean checkControls(double x, double y){
+        if(passButton.contains(x,y)){
+            humanPlayer.pass();
+            return true;
+
+        }
+        return false;
+    }
 
     public void pass() {
         passCounter++;

@@ -40,6 +40,8 @@ public class DominoSet {
 
     public void returnDomino(Domino d){
         d.setSpinner(false);
+        d.setFaceUp(false);
+        d.clearConnections();
         dominos.add(d);
     }
 
