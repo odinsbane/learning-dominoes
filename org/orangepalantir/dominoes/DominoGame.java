@@ -40,6 +40,7 @@ public class DominoGame{
 
     PlayerScores scoreBoard = new PlayerScores();
     int passCounter = 0;
+    Player next = null;
     public static DominoGame startSixesGame(){
         DominoGame game = new DominoGame();
         game.set = DominoSet.doubleSixes();
@@ -205,11 +206,37 @@ public class DominoGame{
 
                     }
                     mode = GameMode.PlayGame;
-                    moves.add(new AvailableMove(450, 250));
+                    if(next==null) {
+                        int highest = -1;
+
+                        for (Player p : players) {
+                            List<Domino> dominos = p.getDominos();
+                            for (Domino d : dominos) {
+                                if (d.A == d.B && highest < d.A) {
+                                    highest = d.A;
+                                    next = p;
+                                }
+                            }
+                        }
+                        if (highest >= 0) {
+                            moves.add(AvailableMove.firstMoveOfGame(400, 300, highest));
+                        } else {
+                            moves.add(new AvailableMove(400, 300));
+                            next = players.get(0);
+                        }
+                    } else{
+                        moves.add(new AvailableMove(400, 300));
+                    }
+
                     update();
                 case PlayGame:
                     int passed;
-                    for (Player p : players) {
+
+                    while(playing){
+                        Player p = next;
+                        int i = players.indexOf(p);
+                        next = players.get((i+1)%players.size());
+
                         validMove=false;
                         passed = passCounter;
                         while (!validMove) {
@@ -235,6 +262,7 @@ public class DominoGame{
                     break;
                 case EndOfGame:
                     playing=false;
+                    SHUTDOWN=true;
                     break;
             }
 
@@ -293,6 +321,7 @@ public class DominoGame{
         passCounter = 0;
         moves.clear();
         spinner = false;
+        next=winner;
         if(!finished) {
             dealHand();
         } else{

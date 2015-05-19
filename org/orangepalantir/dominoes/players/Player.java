@@ -11,4 +11,5 @@ public interface Player {
     public void makeMove();
     public int getDominoCount();
     public List<Domino> returnDominos();
+    public List<Domino> getDominos();
 }

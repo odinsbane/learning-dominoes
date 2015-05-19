@@ -38,6 +38,9 @@ public class AvailableMove {
     }
 
     public int changeIfCovered(Domino check){
+        if(played==null){
+            return check.A + check.B;
+        }
         int lost = getScore();
         if(played.isSpinner()&&played.connectedCount()==0){
             lost = 0;
@@ -139,6 +142,9 @@ public class AvailableMove {
         return replacements;
     }
     public int getScore(){
+        if(played==null){
+            return 0;
+        }
         int score;
         if(played.isSpinner()){
             //check for exposed
@@ -206,6 +212,15 @@ public class AvailableMove {
 
         a.connect(b, faceA);
         b.connect(a, faceB);
+    }
+
+    public static AvailableMove firstMoveOfGame(double x, double y, int value){
+        return new AvailableMove(x,y){
+            @Override
+            public boolean isValidMove(Domino d){
+                return d.A==value&&d.B==value;
+            }
+        };
     }
 
     public static void main(String[] args){

@@ -96,4 +96,10 @@ public class BasicAI implements Player {
         dominos.clear();
         return ret;
     }
+
+    @Override
+    public List<Domino> getDominos() {
+        List<Domino> ret = dominos.stream().collect(Collectors.toList());
+        return ret;
+    }
 }

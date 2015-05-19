@@ -8,6 +8,7 @@ import org.orangepalantir.dominoes.Domino;
 import org.orangepalantir.dominoes.DominoGame;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Queue;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -19,7 +20,7 @@ import java.util.stream.Collectors;
  */
 public class HumanPlayer implements Player{
     DominoGame game;
-    List<Domino> dominos = new ArrayList<>(7);
+    List<Domino> dominos = Collections.synchronizedList( new ArrayList<>(7));
     LinkedBlockingQueue<Domino> toTake = new LinkedBlockingQueue<>(1);
     final Object lock = new Object();
 
@@ -43,10 +44,17 @@ public class HumanPlayer implements Player{
         return ret;
     }
 
+    public List<Domino> getDominos(){
+        List<Domino> ret = dominos.stream().filter(w->w!=null).collect(Collectors.toList());
+        return ret;
+    }
+
     public void draw(GraphicsContext gc){
-        for(Domino d: dominos){
-            if(d!=null) {
-                d.draw(gc);
+        synchronized(dominos) {
+            for (Domino d : dominos) {
+                if (d != null) {
+                    d.draw(gc);
+                }
             }
         }
         if(selected>-1&&selected<dominos.size()){
