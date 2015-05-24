@@ -21,7 +21,12 @@ public class BasicAI implements Player {
     }
 
     public void getPieces(){
-        dominos.add(game.getRandomBone());
+        Domino d = game.getRandomBone();
+        if(d==null){
+            System.out.println("how?");
+        } else {
+            dominos.add(d);
+        }
     }
     class GoodMove{
         Domino domino;
@@ -47,6 +52,7 @@ public class BasicAI implements Player {
             Domino d = game.getRandomBone();
             if(d==null){
                 game.pass();
+                return;
             }
             dominos.add(d);
             return;

@@ -41,6 +41,7 @@ public class DominoGame{
     PlayerScores scoreBoard = new PlayerScores();
     int passCounter = 0;
     Player next = null;
+    Monitor monitor;
     public static DominoGame startSixesGame(){
         DominoGame game = new DominoGame();
         game.set = DominoSet.doubleSixes();
@@ -187,6 +188,7 @@ public class DominoGame{
                 //waiting.
                 break;
         }
+        monitor.input();
     }
 
     void gameLoop(){
@@ -198,7 +200,7 @@ public class DominoGame{
                 case ChoosePieces:
                     for(Player p: players){
 
-                        while(p.getDominoCount()<5){
+                        while(p.getDominoCount()<7){
                             p.makeMove();
                             if(SHUTDOWN) return;
                             update();
@@ -230,46 +232,42 @@ public class DominoGame{
 
                     update();
                 case PlayGame:
-                    int passed;
+                    Player p = next;
+                    int i = players.indexOf(p);
+                    next = players.get((i+1)%players.size());
 
-                    while(playing){
-                        Player p = next;
-                        int i = players.indexOf(p);
-                        next = players.get((i+1)%players.size());
-
-                        validMove=false;
-                        passed = passCounter;
-                        while (!validMove) {
-                            p.makeMove();
-                            if (SHUTDOWN) return;
-                            update();
-                        }
-                        if(passCounter>passed){
-                            //pass count increasing.
-                        } else{
-                            passCounter=0;
-                        }
-                        calculateScore(p);
-                        if(p.getDominoCount()==0||passCounter==players.size()){
-                            mode=GameMode.EndOfHand;
-                            break;
-                        }
+                    validMove=false;
+                    int passed = passCounter;
+                    while (!validMove) {
+                        p.makeMove();
+                        if (SHUTDOWN) return;
+                        update();
                     }
-
+                    if(passCounter>passed){
+                        //pass count increasing.
+                    } else{
+                        passCounter=0;
+                    }
+                    calculateScore(p);
+                    if(p.getDominoCount()==0||passCounter==players.size()){
+                        mode=GameMode.EndOfHand;
+                    }
                     break;
                 case EndOfHand:
                     endOfHandScore();
                     break;
                 case EndOfGame:
-                    playing=false;
-                    SHUTDOWN=true;
+                    //playing=false;
+                    //SHUTDOWN=true;
+                    update();
+                    monitor.waitForInput();
+                    startNewGame();
                     break;
             }
 
 
 
         }
-
 
     }
 
@@ -278,12 +276,20 @@ public class DominoGame{
         scoreBoard.addPlayer(humanPlayer);
         BasicAI bai = new BasicAI(this);
         scoreBoard.addPlayer(bai);
-
+        BasicAI bai2 = new BasicAI(this);
+        scoreBoard.addPlayer(bai2);
         players.add(humanPlayer);
         players.add(bai);
+        players.add(bai2);
+        monitor = new HumanMonitor();
 
         gameLoop = new Thread(()->gameLoop());
         gameLoop.start();
+    }
+
+    private void startNewGame(){
+        scoreBoard.resetScores();
+        dealHand();
     }
 
     private void dealHand(){
@@ -427,6 +433,12 @@ class PlayerScores{
         s.addScore(marks);
         return s.getValue()==winning;
     }
+    public void resetScores(){
+        for(Score s: scores.values()){
+            s.tallies.clear();
+            s.total=0;
+        }
+    }
 
     public void setCurrentTotal(int v){
         currentTotal = v;
@@ -490,4 +502,26 @@ class Tally{
         count++;
     }
 
+}
+
+interface Monitor{
+    public void waitForInput();
+    public void input();
+}
+
+class HumanMonitor implements Monitor{
+    public void input(){
+        synchronized (this){
+            notifyAll();
+        }
+    }
+    public void waitForInput(){
+        synchronized(this){
+            try {
+                wait();
+            } catch (InterruptedException e) {
+                //if the game is ended.
+            }
+        }
+    }
 }
