@@ -288,7 +288,17 @@ public class DominoGame{
     }
 
     private void startNewGame(){
+
+        players.forEach(p->p.returnDominos().forEach(set::returnDomino));
+
+        played.forEach(set::returnDomino);
+        played.clear();
+        boneYard.forEach(set::returnDomino);
+        boneYard.clear();
+        passCounter = 0;
+        moves.clear();
         scoreBoard.resetScores();
+        next=null;
         dealHand();
     }
 
@@ -431,7 +441,11 @@ class PlayerScores{
 
         int marks = value/5;
         s.addScore(marks);
-        return s.getValue()==winning;
+        boolean won = s.getValue()==winning;
+        if(won){
+            s.increaseGame();
+        }
+        return won;
     }
     public void resetScores(){
         for(Score s: scores.values()){
@@ -455,6 +469,7 @@ class PlayerScores{
             gc.strokeText("player: " + i, 100*i, 17);
             gc.strokeText("total: " + scores.get(p).getValue(), 100*i, 30);
             gc.strokeText("dominos: " + p.getDominoCount(), 100*i, 43);
+            gc.strokeText("games: " + scores.get(p).games, 100*i, 56);
             i++;
         }
     }
@@ -463,10 +478,13 @@ class PlayerScores{
 class Score{
     List<Tally> tallies = new ArrayList<>();
     int total;
+    int games;
     public int getValue(){
         return total*5;
     }
-
+    public void increaseGame(){
+        games++;
+    }
     public void addScore(int marks){
 
         total += marks;
