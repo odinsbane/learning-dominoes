@@ -10,6 +10,7 @@ import javafx.scene.text.Font;
 import org.orangepalantir.dominoes.players.BasicAI;
 import org.orangepalantir.dominoes.players.HumanPlayer;
 import org.orangepalantir.dominoes.players.Player;
+import org.orangepalantir.dominoes.players.RandomAI;
 
 import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -20,9 +21,10 @@ import java.util.concurrent.atomic.AtomicBoolean;
  * Created by melkor on 4/8/15.
  */
 public class DominoGame{
+    static int POINTS_TO_WIN = 150;
+    static int INITIAL_DOMINOES = 5;
     DominoSet set;
     AtomicBoolean running = new AtomicBoolean(false);
-    private GraphicsContext gc;
     Thread gameLoop;
 
     List<AvailableMove> moves = Collections.synchronizedList(new ArrayList<>());
@@ -42,19 +44,13 @@ public class DominoGame{
     int passCounter = 0;
     Player next = null;
     Monitor monitor;
+    List<GameObserver> observers = new ArrayList<>();
     public static DominoGame startSixesGame(){
         DominoGame game = new DominoGame();
         game.set = DominoSet.doubleSixes();
         game.running.set(true);
         game.mode = GameMode.GetPlayers;
         return game;
-    }
-
-    public void setGraphicsContext2D(GraphicsContext graphicsContext2D) {
-
-        this.gc = graphicsContext2D;
-        drawBoard();
-        drawBoneYard();
     }
 
     public void fillBoneYard(){
@@ -74,20 +70,9 @@ public class DominoGame{
         return Collections.unmodifiableList(moves);
     }
 
-    void drawBoard(){
-        gc.setStroke(Color.BLACK);
-        gc.setLineWidth(5);
-        gc.setFill(Color.AQUAMARINE);
 
-        gc.fillRect(0,0,800, 600);
-        gc.strokeRect(0, 0, 800, 600);
-    }
 
-    void drawBoneYard(){
-        synchronized(boneYard) {
-            boneYard.forEach(d -> d.draw(gc));
-        }
-    }
+
 
     boolean choosePiece(double x, double y){
         //go through the pieces in the bone yard and select a piece.
@@ -161,6 +146,14 @@ public class DominoGame{
 
         return validMove;
     }
+    public void addObserver(GameObserver o){
+        observers.add(o);
+    }
+    public void update(){
+        for(GameObserver observer: observers){
+            observer.update();
+        }
+    }
 
     public boolean performMove(Domino d, AvailableMove m){
         return performMove(d, moves.indexOf(m));
@@ -200,7 +193,7 @@ public class DominoGame{
                 case ChoosePieces:
                     for(Player p: players){
 
-                        while(p.getDominoCount()<7){
+                        while(p.getDominoCount()<DominoGame.INITIAL_DOMINOES){
                             p.makeMove();
                             if(SHUTDOWN) return;
                             update();
@@ -252,6 +245,7 @@ public class DominoGame{
                     if(p.getDominoCount()==0||passCounter==players.size()){
                         mode=GameMode.EndOfHand;
                     }
+                    update();
                     break;
                 case EndOfHand:
                     endOfHandScore();
@@ -276,7 +270,7 @@ public class DominoGame{
         scoreBoard.addPlayer(humanPlayer);
         BasicAI bai = new BasicAI(this);
         scoreBoard.addPlayer(bai);
-        BasicAI bai2 = new BasicAI(this);
+        Player bai2 = new RandomAI(this);
         scoreBoard.addPlayer(bai2);
         players.add(humanPlayer);
         players.add(bai);
@@ -338,10 +332,25 @@ public class DominoGame{
         moves.clear();
         spinner = false;
         next=winner;
+        postMessage("Player " + winner + "has won!");
+        checkObservers();
         if(!finished) {
             dealHand();
         } else{
             mode=GameMode.EndOfGame;
+        }
+
+    }
+
+    private void postMessage(String s) {
+        for(GameObserver observer: observers){
+            observer.postMessage(s);
+        }
+    }
+
+    private void checkObservers(){
+        for(GameObserver observer: observers){
+            observer.waitForInput();
         }
     }
 
@@ -363,49 +372,23 @@ public class DominoGame{
 
     }
 
-    public void update(){
-        Platform.runLater(this::repaint);
-    }
+
 
     void shutdown(){
         SHUTDOWN=true;
         gameLoop.interrupt();
     }
 
-    void drawMoves(){
-        synchronized(moves) {
-            for (AvailableMove m : moves) {
-                m.draw(gc);
-            }
-        }
-    }
-
-    void drawPlayed(){
-        played.forEach(d -> d.draw(gc));
-    }
 
 
 
-    void repaint(){
-        drawBoard();
-        drawBoneYard();
-        humanPlayer.draw(gc);
-        drawPlayed();
-        drawMoves();
-        drawControls();
-        scoreBoard.draw(gc);
-    }
+
+
+
+
 
     Rectangle passButton = new Rectangle(600, 400, 30, 30);
-    public void drawControls(){
-        gc.setFill(Color.BLACK);
 
-        gc.fillRect(600, 400, 30, 30);
-        gc.setStroke(Color.WHITE);
-        gc.setFont(new Font(10));
-        gc.setLineWidth(1);
-        gc.strokeText("pass", 600, 421);
-    }
 
     public boolean checkControls(double x, double y){
         if(passButton.contains(x,y)){
@@ -423,7 +406,7 @@ public class DominoGame{
 }
 
 class PlayerScores{
-    int winning = 150;
+    int winning = DominoGame.POINTS_TO_WIN;
     Map<Player, Score> scores = new HashMap<>();
     int currentTotal = 0;
     public void addPlayer(Player p){
@@ -442,13 +425,14 @@ class PlayerScores{
         int marks = value/5;
         s.addScore(marks);
         boolean won = s.getValue()==winning;
-        if(won){
-            s.increaseGame();
-        }
+
         return won;
     }
     public void resetScores(){
         for(Score s: scores.values()){
+            if(s.getValue()==winning){
+                s.increaseGame();
+            }
             s.tallies.clear();
             s.total=0;
         }
@@ -458,21 +442,6 @@ class PlayerScores{
         currentTotal = v;
     }
 
-    public void draw(GraphicsContext gc) {
-        //gc.setFill(Color.BLACK);
-        //gc.fillRect(0, 0, 800, 200);
-        gc.setFont(new Font(12));
-        gc.setStroke(Color.WHITE);
-        gc.strokeText("total: " + currentTotal, 5, 17);
-        int i = 1;
-        for(Player p: scores.keySet() ){
-            gc.strokeText("player: " + i, 100*i, 17);
-            gc.strokeText("total: " + scores.get(p).getValue(), 100*i, 30);
-            gc.strokeText("dominos: " + p.getDominoCount(), 100*i, 43);
-            gc.strokeText("games: " + scores.get(p).games, 100*i, 56);
-            i++;
-        }
-    }
 }
 
 class Score{

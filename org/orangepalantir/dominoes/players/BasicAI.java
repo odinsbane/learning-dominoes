@@ -10,32 +10,17 @@ import java.util.Random;
 import java.util.stream.Collectors;
 
 /**
+ * It will play the highest scoring value it can. Otherwise it will
+ * play a random valid move.
+ *
  * Created by msmith on 5/13/15.
  */
-public class BasicAI implements Player {
-    DominoGame game;
-    List<Domino> dominos = new ArrayList<>(7);
-    Random ng = new Random();
+public class BasicAI extends AbstractAI {
     public BasicAI(DominoGame game){
-        this.game = game;
+        super(game);
     }
 
-    public void getPieces(){
-        Domino d = game.getRandomBone();
-        if(d==null){
-            System.out.println("how?");
-        } else {
-            dominos.add(d);
-        }
-    }
-    class GoodMove{
-        Domino domino;
-        AvailableMove move;
-        GoodMove(Domino d, AvailableMove m){
-            domino = d;
-            move = m;
-        }
-    }
+    @Override
     public void playDomino(){
         List<AvailableMove> moves = game.getAvailableMoves();
         int current = 0;
@@ -80,32 +65,7 @@ public class BasicAI implements Player {
     }
 
     @Override
-    public void makeMove() {
-        switch(game.getMode()){
-            case ChoosePieces:
-                getPieces();
-                break;
-            case PlayGame:
-                playDomino();
-                break;
-        }
-    }
-
-    @Override
-    public int getDominoCount() {
-        return dominos.size();
-    }
-
-    @Override
-    public List<Domino> returnDominos() {
-        List<Domino> ret = dominos.stream().collect(Collectors.toList());
-        dominos.clear();
-        return ret;
-    }
-
-    @Override
-    public List<Domino> getDominos() {
-        List<Domino> ret = dominos.stream().collect(Collectors.toList());
-        return ret;
+    public String toString(){
+        return "basic";
     }
 }

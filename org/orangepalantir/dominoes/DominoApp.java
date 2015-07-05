@@ -9,6 +9,7 @@ import javafx.scene.Scene;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.control.Button;
+import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.StackPane;
 import javafx.stage.Stage;
@@ -23,6 +24,7 @@ import java.util.regex.Pattern;
  */
 public class DominoApp extends Application {
     DominoGame game;
+    DominoDisplay display;
     GraphicsContext gc;
     @Override
     public void start(Stage primaryStage) {
@@ -30,14 +32,17 @@ public class DominoApp extends Application {
 
         Canvas canvas = new Canvas(800, 600);
         gc = canvas.getGraphicsContext2D();
+        display = new DominoDisplay(gc);
         canvas.addEventHandler(MouseEvent.MOUSE_PRESSED, mouseEvent -> {
             if(game==null){
                 game = DominoGame.startSixesGame();
-                game.setGraphicsContext2D(gc);
+                display.setGame(game);
             } else{
-                game.clicked(mouseEvent.getX(), mouseEvent.getY());
+                display.clicked(mouseEvent.getX(), mouseEvent.getY());
             }
         });
+
+
 
         StackPane root = new StackPane();
         root.getChildren().add(canvas);
@@ -48,6 +53,11 @@ public class DominoApp extends Application {
                 game.shutdown();
             }
         });
+
+        primaryStage.addEventHandler(KeyEvent.KEY_PRESSED, keyEvent -> {
+            display.keyPressed(keyEvent);
+        });
+
     }
 
 
