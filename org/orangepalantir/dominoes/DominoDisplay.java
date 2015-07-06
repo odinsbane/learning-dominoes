@@ -98,7 +98,7 @@ public class DominoDisplay implements GameObserver{
             try{
                 wait();
             } catch(Exception e){
-                e.printStackTrace();
+                game.shutdown();
             }
             messages.clear();
         }
@@ -163,6 +163,12 @@ public class DominoDisplay implements GameObserver{
                 break;
             case RIGHT:
                 shift(5, 0);
+                break;
+            case UP:
+                shift(0,-5);
+                break;
+            case DOWN:
+                shift(0, 5);
                 break;
             default:
         }
