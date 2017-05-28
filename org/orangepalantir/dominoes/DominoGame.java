@@ -26,7 +26,8 @@ public class DominoGame{
     DominoSet set;
     AtomicBoolean running = new AtomicBoolean(false);
     Thread gameLoop;
-
+    List<AvailableMove> moveLog = Collections.synchronizedList(new ArrayList<>());
+    List<GameState> stateLog = Collections.synchronizedList(new ArrayList<>());
     List<AvailableMove> moves = Collections.synchronizedList(new ArrayList<>());
     List<Domino> played = Collections.synchronizedList(new ArrayList<>());
 
@@ -139,9 +140,11 @@ public class DominoGame{
                     spinner=true; //no more spinners this game.
                 }
             }
+            moveLog.add(m);
             moves.remove(m);
             moves.addAll(m.performMove(d));
             played.add(d);
+            stateLog.add(new GameState(this));
         }
 
         return validMove;

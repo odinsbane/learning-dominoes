@@ -190,4 +190,9 @@ public class Domino {
             neighbors[i] = null;
         }
     }
+
+    @Override
+    public String toString(){
+        return " ||" + A + ":" + B + "|| ";
+    }
 }
