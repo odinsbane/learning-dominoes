@@ -44,7 +44,7 @@ public class DominoGame{
     PlayerScores scoreBoard = new PlayerScores();
     int passCounter = 0;
     Player next = null;
-    Monitor monitor;
+    private Monitor monitor;
     List<GameObserver> observers = new ArrayList<>();
     public static DominoGame startSixesGame(){
         DominoGame game = new DominoGame();
@@ -85,6 +85,9 @@ public class DominoGame{
         }
 
         return false;
+    }
+    public void setMonitor(Monitor m){
+        monitor = m;
     }
 
     public boolean takePieceFromBoneYard(Domino d){
@@ -190,6 +193,7 @@ public class DominoGame{
     void gameLoop(){
         dealHand();
         boolean playing = true;
+        Player wonTheGame = null;
         while(playing) {
 
             switch(mode){
@@ -254,11 +258,9 @@ public class DominoGame{
                     endOfHandScore();
                     break;
                 case EndOfGame:
-                    //playing=false;
-                    //SHUTDOWN=true;
+                    playing=false;
                     update();
                     monitor.waitForInput();
-                    startNewGame();
                     break;
             }
 
@@ -266,6 +268,11 @@ public class DominoGame{
 
         }
 
+
+    }
+    public void addPlayer(Player p){
+        players.add(p);
+        scoreBoard.addPlayer(p);
     }
 
     private void startGame(){
@@ -278,13 +285,12 @@ public class DominoGame{
         players.add(humanPlayer);
         players.add(bai);
         players.add(bai2);
-        monitor = new HumanMonitor();
 
         gameLoop = new Thread(()->gameLoop());
         gameLoop.start();
     }
 
-    private void startNewGame(){
+    public void startNewGame(){
 
         players.forEach(p->p.returnDominos().forEach(set::returnDomino));
 
@@ -310,17 +316,24 @@ public class DominoGame{
         int min = Integer.MAX_VALUE;
         int sum = 0;
         Player winner=null;
+        Player finisher = null;
         for(Player p: players){
             List<Domino> dees = p.returnDominos();
             int v = dees.stream().mapToInt(d->d.A+d.B).sum();
             if(v<min){
-               min = v;
+                min = v;
                 winner = p;
             }
             sum += v;
+            if(dees.size()==0){
+                finisher = p;
+            }
             dees.forEach(d->{d.setFaceUp(false);set.returnDomino(d);});
         }
-
+        if(finisher!=null){
+            //In case somebody has 00 they could be the winner.
+            winner = finisher;
+        }
         sum = sum - 2*min;
         sum = (sum - sum%5);
         boolean finished = false;

@@ -59,8 +59,10 @@ public class DominoApp extends Application {
         canvas.addEventHandler(MouseEvent.MOUSE_PRESSED, mouseEvent -> {
             if(game==null){
                 game = DominoGame.startSixesGame();
+                game.setMonitor(new HumanMonitor());
                 display.setGame(game);
                 log.setGame(game);
+
             } else{
                 display.clicked(mouseEvent.getX(), mouseEvent.getY());
             }
