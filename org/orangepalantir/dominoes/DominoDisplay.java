@@ -4,6 +4,7 @@ import javafx.application.Platform;
 import javafx.event.Event;
 import javafx.geometry.Bounds;
 import javafx.scene.canvas.GraphicsContext;
+import javafx.scene.control.ChoiceDialog;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
@@ -76,12 +77,28 @@ public class DominoDisplay implements GameObserver{
         gc.setLineWidth(1);
         gc.strokeText("pass", 600, 421);
     }
-
+    final static String PLAYAGAIN = "Play Again";
+    final static String QUIT = "Quit";
     public void update(){
         if(player==null) {
             if (game.players.size()>0 && game.players.get(0) instanceof HumanPlayer) {
                 player = (HumanPlayer) game.players.get(0);
             }
+        }
+        if(game.getMode()==GameMode.EndOfGame){
+            game.startNewGame();
+            Platform.runLater(()->{
+                ChoiceDialog<String> playAgain = new ChoiceDialog<>(PLAYAGAIN, PLAYAGAIN, QUIT);
+                String option = playAgain.showAndWait().orElseGet(()->"none");
+                System.out.println(option);
+                switch(option){
+                    case PLAYAGAIN:
+                        break;
+                    default:
+                        game.mode = GameMode.GetPlayers;
+                }
+                game.gameLoop.execute(game::gameLoop);
+            });
         }
         Platform.runLater(this::repaint);
 

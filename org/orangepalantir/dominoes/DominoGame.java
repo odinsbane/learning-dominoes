@@ -13,6 +13,8 @@ import org.orangepalantir.dominoes.players.Player;
 import org.orangepalantir.dominoes.players.RandomAI;
 
 import java.util.*;
+import java.util.concurrent.Executor;
+import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
@@ -25,7 +27,7 @@ public class DominoGame{
     static int INITIAL_DOMINOES = 5;
     DominoSet set;
     AtomicBoolean running = new AtomicBoolean(false);
-    Thread gameLoop;
+    Executor gameLoop = Executors.newSingleThreadExecutor();
     List<AvailableMove> moveLog = Collections.synchronizedList(new ArrayList<>());
     List<GameState> stateLog = Collections.synchronizedList(new ArrayList<>());
     List<AvailableMove> moves = Collections.synchronizedList(new ArrayList<>());
@@ -193,7 +195,6 @@ public class DominoGame{
     void gameLoop(){
         dealHand();
         boolean playing = true;
-        Player wonTheGame = null;
         while(playing) {
 
             switch(mode){
@@ -286,8 +287,7 @@ public class DominoGame{
         players.add(bai);
         players.add(bai2);
 
-        gameLoop = new Thread(()->gameLoop());
-        gameLoop.start();
+        gameLoop.execute(()->gameLoop());
     }
 
     public void startNewGame(){
@@ -392,7 +392,6 @@ public class DominoGame{
 
     void shutdown(){
         SHUTDOWN=true;
-        gameLoop.interrupt();
     }
 
 

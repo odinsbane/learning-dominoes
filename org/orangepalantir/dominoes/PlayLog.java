@@ -35,6 +35,7 @@ public class PlayLog implements GameObserver{
         }
 
         List<Text> history = new ArrayList<>(moves.size()+states.size());
+        System.out.println(moves.size() + ", " + states.size());
         for(int i = 0;i<moves.size(); i++){
             history.add(moves.get(i));
             history.add(states.get(i));

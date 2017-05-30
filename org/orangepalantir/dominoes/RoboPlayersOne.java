@@ -17,24 +17,27 @@ public class RoboPlayersOne implements Monitor{
     public void runGames(){
         int basicTally = 0;
         int randomTally = 0;
+        int random2Tally = 0;
         for(int i = 0; i<10000; i++){
             DominoGame game = DominoGame.startSixesGame();
             BasicAI bai = new BasicAI(game);
             RandomAI ai = new RandomAI(game);
+            RandomAI ai2 = new RandomAI(game);
             game.addPlayer(bai);
             game.addPlayer(ai);
+            game.addPlayer(ai2);
+
             game.setMonitor(this);
             game.startNewGame();
             game.gameLoop();
             int basic = game.scoreBoard.scores.get(bai).getValue();
             int random = game.scoreBoard.scores.get(ai).getValue();
-            if(basic>random){
-                basicTally += 1;
-            } else{
-                randomTally += 1;
-            }
+            int random2 = game.scoreBoard.scores.get(ai2).getValue();
+            basicTally += basic==150?1:0;
+            randomTally += random==150?1:0;
+            random2Tally += random2==150?1:0;
         }
-        System.out.println(basicTally + ", " + randomTally);
+        System.out.println(basicTally + ", " + randomTally + ", " + random2Tally);
     }
     public static void main(String[] args){
 
