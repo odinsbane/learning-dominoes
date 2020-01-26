@@ -25,6 +25,8 @@ public class DominoApp extends Application {
         primaryStage.setTitle("Learning Dominos!");
 
         Canvas canvas = new Canvas(800, 600);
+        canvas.setScaleX(2);
+        canvas.setScaleY(2);
         gc = canvas.getGraphicsContext2D();
         display = new DominoDisplay(gc);
 

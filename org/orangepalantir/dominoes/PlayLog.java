@@ -25,6 +25,8 @@ public class PlayLog implements GameObserver{
     }
     @Override
     public void update() {
+        System.out.println("updating logs");
+
         List<Text> moves;
         synchronized (game.moveLog) {
             moves = game.moveLog.stream().map(m -> new Text(m.toString())).collect(Collectors.toList());
@@ -35,8 +37,8 @@ public class PlayLog implements GameObserver{
         }
 
         List<Text> history = new ArrayList<>(moves.size()+states.size());
-        System.out.println(moves.size() + ", " + states.size());
-        for(int i = 0;i<moves.size(); i++){
+        int n = moves.size()<states.size()?moves.size():states.size();
+        for(int i = 0;i<n; i++){
             history.add(moves.get(i));
             history.add(states.get(i));
         }
@@ -45,6 +47,7 @@ public class PlayLog implements GameObserver{
             parent.getChildren().clear();
             parent.getChildren().addAll(history);
         });
+        
     }
 
     @Override

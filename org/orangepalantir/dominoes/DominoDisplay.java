@@ -8,6 +8,8 @@ import javafx.scene.control.ChoiceDialog;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
+import javafx.scene.transform.Affine;
+import javafx.scene.transform.Transform;
 import org.orangepalantir.dominoes.players.HumanPlayer;
 import org.orangepalantir.dominoes.players.Player;
 
@@ -126,6 +128,7 @@ public class DominoDisplay implements GameObserver{
     }
 
     void repaint(){
+
         drawBoard();
         drawBoneYard();
         drawHumanPlayer();
