@@ -7,18 +7,18 @@ import javafx.scene.paint.Color;
 import javafx.scene.paint.Paint;
 import javafx.scene.shape.Rectangle;
 import javafx.scene.text.Font;
-import org.orangepalantir.dominoes.players.BasicAI;
-import org.orangepalantir.dominoes.players.HumanPlayer;
-import org.orangepalantir.dominoes.players.Player;
-import org.orangepalantir.dominoes.players.RandomAI;
+import org.orangepalantir.dominoes.players.*;
 
 import java.util.*;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.stream.Collectors;
 
 /**
  * Keeps track of the game state.
+ *
+ * Five years later and I look at this class and think. What was I thinking.
  *
  * Created by melkor on 4/8/15.
  */
@@ -73,6 +73,20 @@ public class DominoGame{
         return Collections.unmodifiableList(moves);
     }
 
+    /**
+     * Goes through all of the available moves and finds the exposed number.
+     *
+     * @return the exposed number.
+     */
+    public List<Integer> getExposedNumbers(){
+        return moves.stream().filter(
+                AvailableMove::hasBase
+            ).map(
+                AvailableMove::exposedNumber
+            ).collect(
+                Collectors.toList()
+            );
+    }
 
 
 
@@ -279,9 +293,9 @@ public class DominoGame{
     private void startGame(){
         humanPlayer = new HumanPlayer(this);
         scoreBoard.addPlayer(humanPlayer);
-        BasicAI bai = new BasicAI(this);
+        Player bai = new RandomAI(this);
         scoreBoard.addPlayer(bai);
-        Player bai2 = new RandomAI(this);
+        Player bai2 = new ImprovedBasic(this, 1, 3, 0);
         scoreBoard.addPlayer(bai2);
         players.add(humanPlayer);
         players.add(bai);
@@ -387,21 +401,9 @@ public class DominoGame{
         scoreBoard.setCurrentTotal(tally);
 
     }
-
-
-
     void shutdown(){
         SHUTDOWN=true;
     }
-
-
-
-
-
-
-
-
-
     Rectangle passButton = new Rectangle(600, 400, 30, 30);
 
 

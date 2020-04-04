@@ -18,11 +18,23 @@ public class AvailableMove {
     int exposedLocation = -1;
     Domino based;
     Domino played;
+
+    /**
+     * Creates an available move off of this dominoe.
+     *
+     * @param d the domino that is associated to this move.
+     * @param location the location of the move relative to the domino end.
+     */
     public AvailableMove(Domino d, int location){
         based = d;
         exposedLocation = location;
     }
 
+    /**
+     * Creates an emtpy available move, at the specified location. Presumable the start of the game.
+     * @param x
+     * @param y
+     */
     public AvailableMove(double x, double y){
         xy[0] = x;
         xy[1] = y;
@@ -142,6 +154,15 @@ public class AvailableMove {
 
         return replacements;
     }
+
+    public boolean hasBase(){
+        return based!=null;
+    }
+
+    public Integer exposedNumber(){
+        return based.getPlayableValue(exposedLocation);
+    }
+
     public int getScore(){
         if(based ==null){
             return 0;

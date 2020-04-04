@@ -6,8 +6,6 @@ import org.orangepalantir.dominoes.DominoGame;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Random;
-import java.util.stream.Collectors;
 
 /**
  * It will play the highest scoring value it can. Otherwise it will

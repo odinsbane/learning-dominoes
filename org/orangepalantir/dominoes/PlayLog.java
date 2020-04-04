@@ -25,7 +25,6 @@ public class PlayLog implements GameObserver{
     }
     @Override
     public void update() {
-        System.out.println("updating logs");
 
         List<Text> moves;
         synchronized (game.moveLog) {

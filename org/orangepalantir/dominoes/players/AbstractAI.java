@@ -73,6 +73,6 @@ abstract public class AbstractAI implements Player {
 
     @Override
     public String toString(){
-        return "basic";
+        return "abstract";
     }
 }

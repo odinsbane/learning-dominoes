@@ -1,6 +1,8 @@
 package org.orangepalantir.dominoes;
 
 import org.orangepalantir.dominoes.players.BasicAI;
+import org.orangepalantir.dominoes.players.ImprovedBasic;
+import org.orangepalantir.dominoes.players.Player;
 import org.orangepalantir.dominoes.players.RandomAI;
 
 /**
@@ -21,7 +23,7 @@ public class RoboPlayersOne implements Monitor{
         for(int i = 0; i<10000; i++){
             DominoGame game = DominoGame.startSixesGame();
             BasicAI bai = new BasicAI(game);
-            RandomAI ai = new RandomAI(game);
+            Player ai = new ImprovedBasic(game, 1, 4, 0.001);
             RandomAI ai2 = new RandomAI(game);
             game.addPlayer(bai);
             game.addPlayer(ai);
