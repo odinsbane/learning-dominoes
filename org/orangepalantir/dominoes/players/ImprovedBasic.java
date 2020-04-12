@@ -30,11 +30,14 @@ public class ImprovedBasic extends AbstractAI {
      * @param playing The weight attributed to keeping remaining moves.
      * @param value The weight attributed to the value of the domino being played.
      */
-    public ImprovedBasic(DominoGame game, double scoring, double playing, double value){
-        super(game);
+    public ImprovedBasic(double scoring, double playing, double value){
         pointWeight = scoring;
         playWeight = playing;
         countWeight = value;
+    }
+
+    public ImprovedBasic(){
+        this(1.0, 2.0, 0.01);
     }
 
     class MoveScore implements Comparable<MoveScore>{

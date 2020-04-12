@@ -19,7 +19,7 @@ abstract public class AbstractAI implements Player {
     public AbstractAI(){
 
     }
-    public AbstractAI(DominoGame game){
+    public void setGame(DominoGame game){
         this.game = game;
     }
 

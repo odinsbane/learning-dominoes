@@ -11,6 +11,7 @@ import org.orangepalantir.dominoes.players.*;
 
 import java.util.*;
 import java.util.concurrent.Executor;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
@@ -27,7 +28,6 @@ public class DominoGame{
     static int INITIAL_DOMINOES = 5;
     DominoSet set;
     AtomicBoolean running = new AtomicBoolean(false);
-    Executor gameLoop = Executors.newSingleThreadExecutor();
     List<AvailableMove> moveLog = Collections.synchronizedList(new ArrayList<>());
     List<GameState> stateLog = Collections.synchronizedList(new ArrayList<>());
     List<AvailableMove> moves = Collections.synchronizedList(new ArrayList<>());
@@ -39,7 +39,6 @@ public class DominoGame{
     List<Player> players = new ArrayList<>(4);
     HumanPlayer humanPlayer;
     GameMode mode;
-    boolean SHUTDOWN = false;
     boolean validMove = false;
     boolean spinner = false;
 
@@ -48,12 +47,35 @@ public class DominoGame{
     Player next = null;
     private Monitor monitor;
     List<GameObserver> observers = new ArrayList<>();
-    public static DominoGame startSixesGame(){
-        DominoGame game = new DominoGame();
-        game.set = DominoSet.doubleSixes();
-        game.running.set(true);
-        game.mode = GameMode.GetPlayers;
+    PlayLog log = new PlayLog();
+    final Thread main;
+
+    public static DominoGame startSixesGame(List<Player> players){
+        DominoGame game = new DominoGame(players, DominoSet.doubleSixes());
         return game;
+    }
+
+    public DominoGame(List<Player> players, DominoSet set){
+        main = new Thread(()->gameLoop());
+        main.setName("Domino Game Main Thread.");
+        for(Player p: players){
+            this.players.add(p);
+            scoreBoard.addPlayer(p);
+            p.setGame(this); //dangerous.
+        }
+        this.set = set;
+        this.mode = GameMode.Created;
+        monitor = new Monitor() {
+            @Override
+            public void waitForInput() {
+                //pass
+            }
+
+            @Override
+            public void input() {
+                //pass
+            }
+        };
     }
 
     public void fillBoneYard(){
@@ -65,6 +87,7 @@ public class DominoGame{
             boneYard.add(d);
         }
     }
+
     public GameMode getMode(){
         return mode;
     }
@@ -92,6 +115,7 @@ public class DominoGame{
 
 
     boolean choosePiece(double x, double y){
+
         //go through the pieces in the bone yard and select a piece.
         for(Domino d: boneYard){
             if(d.contains(x,y)) {
@@ -101,9 +125,6 @@ public class DominoGame{
         }
 
         return false;
-    }
-    public void setMonitor(Monitor m){
-        monitor = m;
     }
 
     public boolean takePieceFromBoneYard(Domino d){
@@ -186,9 +207,6 @@ public class DominoGame{
             case ChoosePieces:
                 choosePiece(x, y);
                 break;
-            case GetPlayers:
-                startGame();
-                break;
             case PlayGame:
                 if(choosePiece(x,y)){
                     update();
@@ -207,17 +225,17 @@ public class DominoGame{
     }
 
     void gameLoop(){
-        dealHand();
-        boolean playing = true;
-        while(playing) {
-
+        while(running.get()) {
             switch(mode){
+                case Deal:
+                    dealHand();
+                    break;
                 case ChoosePieces:
                     for(Player p: players){
 
                         while(p.getDominoCount()<DominoGame.INITIAL_DOMINOES){
                             p.makeMove();
-                            if(SHUTDOWN) return;
+                            if(!running.get()) return;
                             update();
                         }
 
@@ -255,7 +273,7 @@ public class DominoGame{
                     int passed = passCounter;
                     while (!validMove) {
                         p.makeMove();
-                        if (SHUTDOWN) return;
+                        if (!running.get()) return;
                         update();
                     }
                     if(passCounter>passed){
@@ -264,6 +282,9 @@ public class DominoGame{
                         passCounter=0;
                     }
                     calculateScore(p);
+                    if(mode == GameMode.EndOfGame){
+                        break;
+                    }
                     if(p.getDominoCount()==0||passCounter==players.size()){
                         mode=GameMode.EndOfHand;
                     }
@@ -273,41 +294,23 @@ public class DominoGame{
                     endOfHandScore();
                     break;
                 case EndOfGame:
-                    playing=false;
                     update();
+                    mode = GameMode.Finished;
+                    //Last chance to stop the game from finishing.
                     monitor.waitForInput();
                     break;
+                case Finished:
+                    running.set(false);
             }
 
 
 
         }
-
-
-    }
-    public void addPlayer(Player p){
-        players.add(p);
-        scoreBoard.addPlayer(p);
     }
 
-    private void startGame(){
-        humanPlayer = new HumanPlayer(this);
-        scoreBoard.addPlayer(humanPlayer);
-        Player bai = new RandomAI(this);
-        scoreBoard.addPlayer(bai);
-        Player bai2 = new ImprovedBasic(this, 1, 3, 0);
-        scoreBoard.addPlayer(bai2);
-        players.add(humanPlayer);
-        players.add(bai);
-        players.add(bai2);
 
-        gameLoop.execute(()->gameLoop());
-    }
-
-    public void startNewGame(){
-
+    private void startNewGame(){
         players.forEach(p->p.returnDominos().forEach(set::returnDomino));
-
         played.forEach(set::returnDomino);
         played.clear();
         boneYard.forEach(set::returnDomino);
@@ -326,6 +329,10 @@ public class DominoGame{
         update();
     }
 
+    /**
+     * This occurs if: A player has run out of pieces, or if everybody has passed.
+     *
+     */
     private void endOfHandScore(){
         int min = Integer.MAX_VALUE;
         int sum = 0;
@@ -402,7 +409,7 @@ public class DominoGame{
 
     }
     void shutdown(){
-        SHUTDOWN=true;
+        observers.clear();
     }
     Rectangle passButton = new Rectangle(600, 400, 30, 30);
 
@@ -420,6 +427,34 @@ public class DominoGame{
         passCounter++;
         validMove=true;
     }
+
+    /**
+     * This sets a particular play to be considered the human player. It also adds a monitor ...
+     * @param p
+     */
+    public void setHumanPlayer(HumanPlayer p){
+        humanPlayer = p;
+    }
+    public void play(){
+        mode = GameMode.Deal;
+        running.set(true);
+        main.start();
+    }
+
+    public void playAndWait(){
+        mode = GameMode.Deal;
+        running.set(true);
+        gameLoop();
+    }
+
+    public int getGoal() {
+
+        return POINTS_TO_WIN;
+    }
+
+    public int getPlayersScore(Player player) {
+        return scoreBoard.scores.get(player).getValue();
+    }
 }
 
 class PlayerScores{
@@ -429,6 +464,7 @@ class PlayerScores{
     public void addPlayer(Player p){
         scores.put(p, new Score());
     }
+    Player winner;
     public boolean score(Player p, int value){
         if(value<=0||value%5!=0){
             throw new IllegalArgumentException("scores must be multiples of 5 greater than 0.");
@@ -442,7 +478,17 @@ class PlayerScores{
         int marks = value/5;
         s.addScore(marks);
         boolean won = s.getValue()==winning;
-
+        if(won){
+            int winners = 0;
+            for(Score sc: scores.values()) {
+                if (sc.getValue() == 150) winners++;
+            }
+            if(winners>1){
+                throw new RuntimeException("multiple winners! " + winner);
+            } else{
+                winner = p;
+            }
+        }
         return won;
     }
     public void resetScores(){
@@ -513,18 +559,28 @@ interface Monitor{
     public void input();
 }
 
+/**
+ * The human monitor waits on a click action. This is fine for an automonitor too.
+ *
+ */
 class HumanMonitor implements Monitor{
+    private AtomicBoolean waiting = new AtomicBoolean(false);
     public void input(){
-        synchronized (this){
-            notifyAll();
+        synchronized (waiting){
+            waiting.set(false);
+            waiting.notifyAll();
         }
     }
     public void waitForInput(){
-        synchronized(this){
-            try {
-                wait();
-            } catch (InterruptedException e) {
-                //if the game is ended.
+        System.out.println("waiting");
+        synchronized(waiting){
+            waiting.set(true);
+            while(waiting.get()){
+                try {
+                    waiting.wait();
+                } catch (InterruptedException e) {
+                    //if the game is ended.
+                }
             }
         }
     }

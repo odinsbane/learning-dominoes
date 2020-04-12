@@ -28,8 +28,10 @@ public class HumanPlayer implements Player{
     int play = -1;
 
     int count = 0;
-    public HumanPlayer(DominoGame game){
-        this.game = game;
+    public HumanPlayer(){
+    }
+    public void setGame(DominoGame g){
+        game = g;
     }
 
     public int getDominoCount(){

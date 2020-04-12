@@ -26,7 +26,7 @@ public class DominoDisplay implements GameObserver{
     DominoGame game;
     HumanPlayer player;
     List<String> messages = new ArrayList<>();
-
+    Runnable gameFinisher = ()->{};
     public DominoDisplay(GraphicsContext gc){
 
         this.gc = gc;
@@ -34,7 +34,11 @@ public class DominoDisplay implements GameObserver{
     }
 
     public void setGame(DominoGame g) {
+        if(game != null){
+            System.out.println(game.running.get() + ", " + game.mode);
+        }
         this.game = g;
+        this.player = g.humanPlayer;
         g.addObserver(this);
     }
 
@@ -88,23 +92,26 @@ public class DominoDisplay implements GameObserver{
             }
         }
         if(game.getMode()==GameMode.EndOfGame){
-            game.startNewGame();
             Platform.runLater(()->{
-                ChoiceDialog<String> playAgain = new ChoiceDialog<>(PLAYAGAIN, PLAYAGAIN, QUIT);
+                ChoiceDialog<String> playAgain = new ChoiceDialog<>(PLAYAGAIN, QUIT);
                 String option = playAgain.showAndWait().orElseGet(()->"none");
-                System.out.println(option);
                 switch(option){
                     case PLAYAGAIN:
                         break;
                     default:
-                        game.mode = GameMode.GetPlayers;
+                        gameFinished();
+                        return;
                 }
-                game.gameLoop.execute(game::gameLoop);
             });
         }
         Platform.runLater(this::repaint);
 
     }
+    public void gameFinished(){
+        game.shutdown();
+        gameFinisher.run();
+    }
+
 
     @Override
     public void postMessage(String message) {
@@ -200,5 +207,9 @@ public class DominoDisplay implements GameObserver{
             d.setPosition(p[0]+dx, p[1]+dy);
         });
         update();
+    }
+
+    public void setGameFinisher(Runnable r) {
+        gameFinisher = r;
     }
 }

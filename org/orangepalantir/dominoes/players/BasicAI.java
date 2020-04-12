@@ -14,8 +14,8 @@ import java.util.List;
  * Created by msmith on 5/13/15.
  */
 public class BasicAI extends AbstractAI {
-    public BasicAI(DominoGame game){
-        super(game);
+    public BasicAI(){
+        super();
     }
 
     @Override

@@ -14,9 +14,8 @@ import java.util.stream.Collectors;
  */
 public class PlayLog implements GameObserver{
     DominoGame game;
-    Pane parent;
-    public PlayLog(Pane p){
-        parent = p;
+    public PlayLog(){
+
     }
 
     public void setGame(DominoGame game){
@@ -42,11 +41,6 @@ public class PlayLog implements GameObserver{
             history.add(states.get(i));
         }
 
-        Platform.runLater(()->{
-            parent.getChildren().clear();
-            parent.getChildren().addAll(history);
-        });
-        
     }
 
     @Override

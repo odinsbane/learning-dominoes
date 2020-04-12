@@ -13,8 +13,8 @@ import java.util.List;
  * Created by odinsbane on 7/5/15.
  */
 public class RandomAI extends AbstractAI {
-    public RandomAI(DominoGame g){
-        super(g);
+    public RandomAI(){
+        super();
     }
     @Override
     public void playDomino() {
