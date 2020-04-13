@@ -86,17 +86,13 @@ public class DominoDisplay implements GameObserver{
     final static String PLAYAGAIN = "Play Again";
     final static String QUIT = "Quit";
     public void update(){
-        if(player==null) {
-            if (game.players.size()>0 && game.players.get(0) instanceof HumanPlayer) {
-                player = (HumanPlayer) game.players.get(0);
-            }
-        }
-        if(game.getMode()==GameMode.EndOfGame){
+        if(game.getMode()==GameMode.Finished){
             Platform.runLater(()->{
                 ChoiceDialog<String> playAgain = new ChoiceDialog<>(PLAYAGAIN, QUIT);
                 String option = playAgain.showAndWait().orElseGet(()->"none");
                 switch(option){
                     case PLAYAGAIN:
+                        game.setModeDeal();
                         break;
                     default:
                         gameFinished();

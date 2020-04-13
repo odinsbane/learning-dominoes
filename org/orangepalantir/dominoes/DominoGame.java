@@ -228,7 +228,7 @@ public class DominoGame{
         while(running.get()) {
             switch(mode){
                 case Deal:
-                    dealHand();
+                    startNewGame();
                     break;
                 case ChoosePieces:
                     for(Player p: players){
@@ -294,10 +294,12 @@ public class DominoGame{
                     endOfHandScore();
                     break;
                 case EndOfGame:
-                    update();
                     mode = GameMode.Finished;
-                    //Last chance to stop the game from finishing.
+                    //Update will call the display.
+                    update();
+                    System.out.println(mode + "waiting");
                     monitor.waitForInput();
+                    System.out.println(mode + " waited");
                     break;
                 case Finished:
                     running.set(false);
@@ -434,6 +436,7 @@ public class DominoGame{
      */
     public void setHumanPlayer(HumanPlayer p){
         humanPlayer = p;
+        monitor = new HumanMonitor();
     }
     public void play(){
         mode = GameMode.Deal;
@@ -454,6 +457,10 @@ public class DominoGame{
 
     public int getPlayersScore(Player player) {
         return scoreBoard.scores.get(player).getValue();
+    }
+
+    public void setModeDeal() {
+        mode = GameMode.Deal;
     }
 }
 

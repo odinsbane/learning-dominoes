@@ -1,6 +1,11 @@
 package org.orangepalantir.dominoes;
 
+import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
+import javafx.scene.image.PixelWriter;
+import javafx.scene.image.WritableImage;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Rectangle;
 import javafx.scene.shape.StrokeLineJoin;
@@ -10,6 +15,10 @@ import javafx.scene.text.Font;
  * Created by melkor on 4/8/15.
  */
 public class Domino {
+
+    static Image back = getBackImage();
+    static Image front = getFrontImage();
+    static Image[] images = getNumberImages();
     public double length = 30;
     public double width = 15;
     public final int A;
@@ -123,12 +132,10 @@ public class Domino {
         gc.setLineJoin(StrokeLineJoin.ROUND);
         gc.fillRect(0, 0, width, length);
         gc.strokeRect(0, 0, width, length);
-
         if(faceUp){
-            gc.setLineWidth(1);
-            gc.setFont(new Font(8.0));
-            gc.strokeText(B + "", 0.33*width, 0.75*length);
-            gc.strokeText(A + "", 0.33*width, 0.25*length);
+            gc.drawImage(front, 0, 0);
+            gc.drawImage(images[A], 0, 0);
+            gc.drawImage(images[B], 0, length*0.5);
         }
 
 
@@ -190,9 +197,109 @@ public class Domino {
             neighbors[i] = null;
         }
     }
+    static Image getBackImage(){
+        int length = 30;
+        int width = 15;
+        WritableImage wi = new WritableImage(width, length);
+        PixelWriter pw = wi.getPixelWriter();
+        for(int i = 0; i<width; i++){
+            for(int j = 0; j<length; j++){
+                pw.setColor(i, j, Color.PAPAYAWHIP);
+            }
+        }
+        return wi;
+    }
+
+    static Image getFrontImage(){
+        int length = 30;
+        int width = 15;
+        WritableImage wi = new WritableImage(width, length);
+        PixelWriter pw = wi.getPixelWriter();
+        for(int i = 0; i<width; i++){
+            for(int j = 0; j<length; j++){
+                pw.setColor(i, j, Color.PAPAYAWHIP);
+            }
+        }
+        return wi;
+    }
+
+    static Image[] getNumberImages(){
+        int width = 15;
+
+        WritableImage blank = new WritableImage(width, width);
+
+        WritableImage one = new WritableImage(width, width);
+        PixelWriter pw = one.getPixelWriter();
+        for(int j = width/2 -2; j<width/2+2; j++){
+            for(int i = width/2 -2; i<width/2 + 2; i++){
+                pw.setColor(i, j, Color.BLACK);
+            }
+        }
+
+        WritableImage two = new WritableImage(width, width);
+
+        pw = two.getPixelWriter();
+        for(int j = width/2 -2; j<width/2+2; j++){
+            for(int i = width/2 -2; i<width/2 + 2; i++){
+                pw.setColor(i+4, j, Color.BLACK);
+                pw.setColor(i-4, j, Color.BLACK);
+            }
+        }
+
+        WritableImage three = new WritableImage(width, width);
+
+        pw = three.getPixelWriter();
+        for(int j = width/2 -2; j<width/2+2; j++){
+            for(int i = width/2 -2; i<width/2 + 2; i++){
+                pw.setColor(i, j - 4, Color.BLACK);
+                pw.setColor(i, j, Color.BLACK);
+                pw.setColor(i, j + 4, Color.BLACK);
+            }
+        }
+
+        WritableImage four = new WritableImage(width, width);
+        pw = four.getPixelWriter();
+        for(int j = width/2 -2; j<width/2+2; j++){
+            for(int i = width/2 -2; i<width/2 + 2; i++){
+                pw.setColor(i - 3, j - 3, Color.BLACK);
+                pw.setColor(i + 3, j - 3, Color.BLACK);
+                pw.setColor(i + 3, j + 3, Color.BLACK);
+                pw.setColor(i - 3, j + 3, Color.BLACK);
+            }
+        }
+
+        WritableImage five = new WritableImage(width, width);
+        pw = five.getPixelWriter();
+
+        for(int j = width/2 -2; j<width/2+2; j++){
+            for(int i = width/2 -2; i<width/2 + 2; i++){
+                pw.setColor(i - 4, j - 4, Color.BLACK);
+                pw.setColor(i + 4, j - 4, Color.BLACK);
+                pw.setColor(i + 4, j + 4, Color.BLACK);
+                pw.setColor(i, j, Color.BLACK);
+                pw.setColor(i - 4, j + 4, Color.BLACK);
+            }
+        }
+
+        WritableImage six = new WritableImage(width, width);
+        pw = six.getPixelWriter();
+        for(int j = width/2 -2; j<width/2+2; j++){
+            for(int i = width/2 -2; i<width/2 + 2; i++){
+                pw.setColor(i-3, j - 4, Color.BLACK);
+                pw.setColor(i-3, j, Color.BLACK);
+                pw.setColor(i-3, j + 4, Color.BLACK);
+                pw.setColor(i+3, j - 4, Color.BLACK);
+                pw.setColor(i+3, j, Color.BLACK);
+                pw.setColor(i+3, j + 4, Color.BLACK);
+            }
+        }
+
+        return new Image[] { blank, one, two, three, four, five, six};
+    }
 
     @Override
     public String toString(){
         return " ||" + A + ":" + B + "|| ";
     }
+
 }

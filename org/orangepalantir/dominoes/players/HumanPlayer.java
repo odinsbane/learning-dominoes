@@ -58,18 +58,18 @@ public class HumanPlayer implements Player{
                     d.draw(gc);
                 }
             }
-        }
-        if(selected>-1&&selected<dominos.size()){
-            Domino d = dominos.get(selected);
-            if(d!=null){
-                Bounds b  = d.getBounds().getBoundsInParent();
-                gc.setStroke(Color.GREEN);
-                gc.setLineWidth(2);
-                gc.strokeRect(b.getMinX(), b.getMinY(), b.getWidth(), b.getHeight());
-            } else{
-                selected=-1;
+            if(selected>-1&&selected<dominos.size()) {
+                //race condition
+                Domino d = dominos.get(selected);
+                if (d != null) {
+                    Bounds b = d.getBounds().getBoundsInParent();
+                    gc.setStroke(Color.GREEN);
+                    gc.setLineWidth(2);
+                    gc.strokeRect(b.getMinX(), b.getMinY(), b.getWidth(), b.getHeight());
+                } else {
+                    selected = -1;
+                }
             }
-
         }
     }
 
